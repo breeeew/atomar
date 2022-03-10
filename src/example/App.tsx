@@ -1,10 +1,9 @@
 import React, {useMemo} from "react"
-import "./App.css"
-import {Rx} from "./lib"
-import {Atom} from "./lib"
+import {Rx} from "../lib"
+import {Atom} from "../lib"
 import {combineLatest, defer, repeatWhen} from "rxjs"
-import {useFormController} from "./lib"
-import {FormController} from "./lib"
+import {useFormController} from "../lib"
+import {FormController} from "../lib"
 import Joi from "joi"
 
 class AppController {
