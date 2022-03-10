@@ -1,0 +1,7 @@
+src/*
+.idea
+README.md
+tsconfig.json
+jest.config.js
+!./esm
+!./package.json
