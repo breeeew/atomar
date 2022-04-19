@@ -2,18 +2,18 @@ import {useRx} from "./useRx";
 import type {RxProps} from "./types"
 
 export function Rx<T>(props: RxProps<T>) {
-    const [value, {error, pending}] = useRx(props.value$)
+    const data = useRx(props.value$)
 
-    if (pending) {
+    if (data.status === 'pending') {
         if (props.pending) {
             return props.pending()
         }
         return null
     }
 
-    if (error) {
-        return props.rejected?.(error) ?? <>{error.message}</>
+    if (data.status === 'rejected') {
+        return props.rejected?.(data.error, data.reload) ?? <>{data.error.message}</>
     }
 
-    return props.children(value as T)
+    return props.children(data.value)
 }

@@ -1,11 +1,12 @@
-import {map} from "rxjs";
-import {Atom} from "./atom";
+import {map} from "rxjs"
+import {Atom} from "./"
+import {Lens} from "../lens"
 
 describe('Atom', () => {
     it('Atom.create should return atom instance with initial values', (done) => {
-        const atom$ = new Atom({test: 'value'})
+        const atom$ = Atom.create({test: 'value'})
         const subscribeMock = jest.fn()
-        expect(typeof atom$.update === 'function').toBeTruthy()
+        expect(typeof atom$.modify === 'function').toBeTruthy()
         atom$.subscribe(subscribeMock)
         expect(subscribeMock).toBeCalledWith({test: 'value'})
         atom$.set({test: 'value1'})
@@ -15,10 +16,10 @@ describe('Atom', () => {
     })
 
     it('atom.update should update value by passed callback', (done) => {
-        const atom$ = new Atom({test: 'value'})
+        const atom$ = Atom.create({test: 'value'})
         const subscribeMock = jest.fn()
         atom$.subscribe(subscribeMock)
-        atom$.update(value => {
+        atom$.modify(value => {
             expect(value).toStrictEqual({test: 'value'})
             return {test: 'value2'}
         })
@@ -57,9 +58,9 @@ describe('Atom', () => {
         const lensed$ = atom$.lens('test')
         const innerLensed$ = lensed$.lens('inner')
         const valueLensed$ = innerLensed$.lens('value')
-        expect(valueLensed$.getValue()).toBe(123)
+        expect(valueLensed$.get()).toBe(123)
         valueLensed$.set(333)
-        expect(atom$.getValue()).toStrictEqual({test: {inner: {value: 333}}})
+        expect(atom$.get()).toStrictEqual({test: {inner: {value: 333}}})
     })
 
     it('Atom is valid Observable', () => {
@@ -70,23 +71,78 @@ describe('Atom', () => {
         expect(resSubscriptionMock).toBeCalledWith({value: 123})
     })
 
-    it('Atom.isAtom should check instance type', () => {
-        const atom$ = Atom.create({test: 123})
-        expect(Atom.isAtom(atom$)).toBeTruthy()
-        const lens$ = atom$.lens('test')
-        expect(Atom.isAtom(lens$)).toBeTruthy()
-    })
+    it('Should lens by Lens object', () => {
+        type Value = {
+            test: number
+            inner: {
+                value: string
+                deep: {
+                    deepValue: string
+                    deepInt: number
+                }
+            }
+        }
+        const testLens = Lens.create((value: Value) => value.test, (value: number, current) => ({
+            ...current,
+            test: value,
+        }))
 
-    it('Should unsubscribe in correct way', () => {
-        const atom$ = Atom.create({test: 123})
-        const lensed$ = atom$.lens('test')
-        lensed$.unsubscribe = jest.fn()
-        const sub = lensed$.subscribe(jest.fn())
-        sub.unsubscribe()
-        expect(lensed$.unsubscribe).toBeCalledTimes(1)
+        const atom$ = Atom.create<Value>({
+            test: 0,
+            inner: {
+                value: 'value',
+                deep: {
+                    deepValue: 'qwe',
+                    deepInt: 123,
+                },
+            },
+        })
 
-        const atomSub = atom$.subscribe()
-        atomSub.unsubscribe()
-        expect(atomSub.closed).toBeTruthy()
+        const lensed$ = atom$.lens(testLens)
+        expect(lensed$.get()).toEqual(0)
+        lensed$.set(1)
+        expect(lensed$.get()).toEqual(1)
+        expect(atom$.get().test).toEqual(1)
+
+        const innerLens = Lens.create((value: Value) => value.inner.value, (value: string, current) => ({
+            ...current,
+            inner: {
+                ...current.inner,
+                value,
+            },
+        }))
+
+        const innerLensed$ = atom$.lens(innerLens)
+        expect(innerLensed$.get()).toEqual("value")
+        innerLensed$.set('changed')
+        expect(innerLensed$.get()).toEqual("changed")
+        expect(atom$.get()).toEqual({
+            test: 1,
+            inner: {
+                value: 'changed',
+                deep: {
+                    deepValue: 'qwe',
+                    deepInt: 123,
+                },
+            },
+        })
+
+        const deepLens = Lens.create(
+            (value: Value) => value.inner.deep,
+            (value: Value["inner"]["deep"], current) => ({
+            ...current,
+            inner: {
+                ...current.inner,
+                deep: value,
+            },
+        }))
+        const deepLensed$ = atom$.lens(deepLens)
+        expect(deepLensed$.get()).toEqual({
+            deepValue: 'qwe',
+            deepInt: 123,
+        })
+
+        deepLensed$.set({deepInt: 111, deepValue: 'asd'})
+        expect(deepLensed$.get()).toEqual({deepInt: 111, deepValue: 'asd'})
     })
 })

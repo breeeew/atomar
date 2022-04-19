@@ -2,8 +2,7 @@ import React, {useMemo} from "react"
 import {Rx} from "../lib"
 import {Atom} from "../lib"
 import {combineLatest, defer, repeatWhen} from "rxjs"
-import {useFormController} from "../lib"
-import {FormController} from "../lib"
+import {FormStore, validateJoi} from "../lib"
 import Joi from "joi"
 
 class AppController {
@@ -12,33 +11,31 @@ class AppController {
 
     greetingsWithCounter$ = combineLatest([this.greetings$, this.counter$])
 
-    form = new FormController<{input: string}>({
-        initialValues: {input: ""},
-        schema: Joi.object({
-            input: Joi.string(),
-        }),
-    })
+    validate = validateJoi(Joi.object({
+        input: Joi.string(),
+    }))
+
+    form = FormStore.create<{input: string}>(Atom.create({input: ''}), this.validate)
 
     deferStatus$ = Atom.create<{resolved: boolean, value: string | undefined}>({resolved: false, value: undefined})
 
     defer$ = defer(async () => {
-        this.deferStatus$.set({resolved: false})
+        this.deferStatus$.set({resolved: false, value: undefined})
         await new Promise(res => setTimeout(res, 2000))
-        this.deferStatus$.set({value: `resolved ${this.retryCount$.getValue()}`})
+        this.deferStatus$.set({resolved: true, value: `resolved ${this.retryCount$.get()}`})
     }).pipe(repeatWhen(() => this.retryCount$))
 
     retryCount$ = Atom.create(0)
 
-    text$ = this.form.value$.lens("input")
+    text$ = this.form.bind("input")
 
     updateCounter() {
-        this.counter$.update(count => count + 1)
+        this.counter$.modify(count => count + 1)
     }
 }
 
 function App() {
   const controller = useMemo(() => new AppController(), [])
-  const form = useFormController(controller.form)
 
   return (
     <div className="App">
@@ -54,7 +51,7 @@ function App() {
             counter <Rx value$={controller.counter$}>{(count) => <>{count}</>}</Rx>
         </button>
         <hr/>
-        <InputExample controller={controller} form={form}/>
+        <InputExample controller={controller}/>
         <hr/>
         <Rx
             value$={combineLatest([controller.defer$, controller.deferStatus$])}
@@ -64,29 +61,29 @@ function App() {
         <Rx
             value$={controller.retryCount$}
             children={(retryCount) =>
-                <button onClick={() => controller.retryCount$.update(count => count + 1)}>try again ({retryCount})</button>}
+                <button onClick={() => controller.retryCount$.modify(count => count + 1)}>try again ({retryCount})</button>}
         />
     </div>
   )
 }
 
-function InputExample({controller, form}: {controller: AppController, form: FormController<{input: string}>}) {
+function InputExample({controller}: {controller: AppController}) {
     return (
-        <Rx value$={controller.text$}>{(text) => (
+        <Rx value$={controller.text$.value}>{(text) => (
             <div>
                 <input
                     value={text}
-                    onChange={e => form.value$.set({input: e.target.value})}
+                    onChange={e => controller.text$.value.set(e.target.value)}
                 />
                 <Rx
-                    value$={controller.form.validation$}
+                    value$={controller.text$.validationResult}
                     children={validation => (
-                        <div>validation: {validation?.error?.message || "success"}</div>
+                        <div>validation: {validation.status === 'error' ? validation.error : "success"}</div>
                     )}
                 />
                 <button
                     onClick={() => {
-                        form.handleSubmit(console.log)
+                        console.log(controller.form.value.get())
                     }}
                 >
                     submit
