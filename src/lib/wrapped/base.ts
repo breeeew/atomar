@@ -26,7 +26,7 @@ export const pendingWrapped = {
 export const idleWrapped = {
     [wrapped]: symbol,
     status: 'idle',
-}
+} as Wrapped<any>
 
 export function isWrapped(value: unknown): value is Wrapped<any> {
     if (typeof value === "object" && value !== null) {
