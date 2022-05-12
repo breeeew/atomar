@@ -6,4 +6,5 @@ export type RxProps<T> = {
     children(props: T): ReactElement
     rejected?(error: Error, reload?: () => void): ReactElement
     pending?(): ReactElement
+    idle?(): ReactElement
 }

@@ -15,5 +15,12 @@ export function Rx<T>(props: RxProps<T>) {
         return props.rejected?.(data.error, data.reload) ?? <>{data.error.message}</>
     }
 
+    if (data.status === 'idle') {
+        if (props.idle) {
+            return props.idle()
+        }
+        return null
+    }
+
     return props.children(data.value)
 }

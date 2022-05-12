@@ -1,6 +1,6 @@
 import type {Observable} from "rxjs";
 
-export type Wrapped<T> = PendingWrapped | RejectedWrapped | FulfilledWrapped<T>
+export type Wrapped<T> = IdleWrapped | PendingWrapped | RejectedWrapped | FulfilledWrapped<T>
 
 export const wrapped = '__wrapped__'
 export const symbol = Symbol.for(wrapped)
@@ -11,6 +11,10 @@ export type WrappedFlag = {
 
 export type PendingWrapped = {
     status: 'pending'
+} & WrappedFlag
+
+export type IdleWrapped = {
+    status: 'idle'
 } & WrappedFlag
 
 export type RejectedWrapped = {
