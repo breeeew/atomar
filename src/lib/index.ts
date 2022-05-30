@@ -11,3 +11,4 @@ export {createFulfilledWrapped, createRejectedWrapped, wrap, isWrapped, pendingW
 export {validateJoi}
 export * from "./form/types"
 export * from "./wrapped/types"
+export * from "./wrapped/operators"
