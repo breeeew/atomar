@@ -1,6 +1,6 @@
 {
   "name": "atomar",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "atomar is a small simple library based on rx.js and provides atoms concept and glue for react",
   "module": "esm",
   "types": "./esm/index.d.ts",
