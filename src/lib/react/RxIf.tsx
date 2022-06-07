@@ -7,7 +7,7 @@ export interface RxIfProps {
     test$: Observable<any>
     else?: OrReactChild<() => React.ReactNode>
     negate?: boolean
-    children: React.ReactNode
+    children: OrReactChild<() => React.ReactNode>
 }
 
 export function RxIf({ test$, children, negate, else: not }: RxIfProps): React.ReactElement | null {
@@ -15,7 +15,8 @@ export function RxIf({ test$, children, negate, else: not }: RxIfProps): React.R
     const truthy = raw.status === "fulfilled" && Boolean(raw.value)
 
     if (negate && !truthy) {
-        return <>{children}</>
+        if (typeof children === "function") return <>{children()}</>
+        else return <>{children}</>
     } else if (negate) {
         if (typeof not === "function") return <>{not()}</>
         else return <>{not}</>
