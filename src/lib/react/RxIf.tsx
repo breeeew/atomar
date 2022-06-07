@@ -21,7 +21,8 @@ export function RxIf({ test$, children, negate, else: not }: RxIfProps): React.R
         if (typeof not === "function") return <>{not()}</>
         else return <>{not}</>
     } else if (truthy) {
-        return <>{children}</>
+        if (typeof children === "function") return <>{children()}</>
+        else return <>{children}</>
     } else {
         if (typeof not === "function") return <>{not()}</>
         else return <>{not}</>
