@@ -1,6 +1,6 @@
 {
   "name": "@atomrx/utils",
-  "version": "0.1.1-alpha.2",
+  "version": "0.1.1-alpha.3",
   "description": "Utils for whole project",
   "main": "esm/index.js",
   "types": "esm/index.d.ts",

@@ -1,6 +1,6 @@
 {
   "name": "@atomrx/wrapped",
-  "version": "0.1.1-alpha.2",
+  "version": "0.1.1-alpha.3",
   "description": "Wrapped atoms",
   "main": "esm/index.js",
   "types": "esm/index.d.ts",
