@@ -1,6 +1,6 @@
 {
   "name": "@atomar/wrapped",
-  "version": "0.1.1-alpha.1",
+  "version": "0.1.1-alpha.2",
   "description": "Wrapped atoms",
   "main": "esm/index.js",
   "types": "esm/index.d.ts",
