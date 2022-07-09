@@ -1,5 +1,5 @@
 {
-  "name": "atomar",
+  "name": "@atomar/root",
   "version": "0.0.12",
   "description": "atomar is a small simple library based on rx.js and provides atoms concept and glue for react",
   "module": "esm",
@@ -7,7 +7,7 @@
   "main": "./esm/index.js",
   "private": true,
   "workspaces": {
-    "packages": ["./packages"]
+    "packages": ["./packages/**"]
   },
   "dependencies": {
     "joi": "^17.6.0",

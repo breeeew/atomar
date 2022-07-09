@@ -7,6 +7,9 @@
   "module": "esm",
   "author": "Abdulla Bayramov",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "clean": "rm -rf esm",
     "build": "yarn clean && tsc",

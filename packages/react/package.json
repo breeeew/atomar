@@ -7,6 +7,9 @@
   "types": "esm/index.d.ts",
   "module": "esm",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@atomar/wrapped": "^0.1.0"
   },

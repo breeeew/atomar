@@ -7,6 +7,9 @@
   "module": "esm",
   "author": "Abdulla Bayramov",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@atomar/utils": "^0.1.0"
   },
