@@ -1,4 +1,4 @@
-import { Option } from '../utils'
+import type { Option } from '@atomar/utils'
 
 export interface Optic<TSource, T, U> {
     get(s: TSource): T

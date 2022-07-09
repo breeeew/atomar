@@ -19,10 +19,22 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "declaration": true,
-    "outDir": "esm"
+    "outDir": "esm",
+    "paths": {
+      "@atomar/atom": ["./packages/atom/src"],
+      "@atomar/atom/*": ["./packages/atom/src/*"],
+      "@atomar/utils": ["./packages/utils/src"],
+      "@atomar/utils/*":["./packages/utils/src/*"],
+      "@atomar/lens": ["./packages/lens/src"],
+      "@atomar/lens/*": ["./packages/lens/src/*"],
+      "@atomar/react": ["./packages/react/src"],
+      "@atomar/react/*": ["./packages/react/src/*"],
+      "@atomar/wrapped": ["./packages/wrapped/src"],
+      "@atomar/wrapped/*":["./packages/wrapped/src/*"]
+    }
   },
   "include": [
     "src/lib"
   ],
-  "exclude": ["**/*.spec.ts", "**/*.test.ts"]
+  "exclude": ["**/*.spec.ts", "**/*.test.ts"],
 }

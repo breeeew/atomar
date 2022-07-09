@@ -1,5 +1,5 @@
-import { Lens, Prism } from '../lens'
-import { structEq, Option } from './../utils'
+import { Lens, Prism } from '@atomar/lens'
+import { structEq, Option } from '@atomar/utils'
 
 import { Observable, Subscriber, Subscription, BehaviorSubject, combineLatest } from 'rxjs'
 

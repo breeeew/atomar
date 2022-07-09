@@ -1,0 +1,19 @@
+{
+  "name": "@atomar/atom",
+  "version": "0.1.0",
+  "description": "Atoms",
+  "main": "esm/index.js",
+  "types": "esm/index.d.ts",
+  "module": "esm",
+  "author": "Abdulla Bayramov",
+  "license": "MIT",
+  "dependencies": {
+    "@atomar/lens": "*",
+    "@atomar/utils": "*"
+  },
+  "scripts": {
+    "clean": "rm -rf esm",
+    "build": "yarn clean && tsc",
+    "test": "jest"
+  }
+}

@@ -1,4 +1,3 @@
-import React from "react"
 import {equals as structEq} from "./structEq"
 export {equals as structEq} from "./structEq"
 
@@ -50,22 +49,6 @@ export function warning(message: string) {
     } catch (_) {
         /* no-op */
     }
-}
-
-export function getReactComponentName(
-    component: string
-        | React.ComponentClass<any>
-        | React.StatelessComponent<any>
-        | React.Component<any, any>
-) {
-    return typeof component === 'string' ? component
-        : (component as React.ComponentClass<any>).displayName !== undefined
-            ? (component as React.ComponentClass<any>).displayName
-            : (component as React.StatelessComponent<any>).name !== undefined
-                ? (component as React.StatelessComponent<any>).name
-                : component.constructor && component.constructor.name !== undefined
-                    ? component.constructor.name
-                    : undefined
 }
 
 export type Option<T> = T | undefined

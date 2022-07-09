@@ -1,6 +1,6 @@
 import {useEffect, useMemo, useRef, useState} from "react"
-import {pendingWrapped, wrap} from "../wrapped/base";
-import {Wrapped, WrappedObservable} from "../wrapped/types";
+import {pendingWrapped, wrap} from "@atomar/wrapped/base";
+import {Wrapped, WrappedObservable} from "@atomar/wrapped/types";
 
 export function useRx<T>(observable: WrappedObservable<T>, deps: any[] = [observable]): Wrapped<T> {
     const [, setCount] = useState<number>(0)
