@@ -11,8 +11,9 @@
     "access": "public"
   },
   "scripts": {
-    "clean": "rm -rf esm",
-    "build": "yarn clean && tsc",
+    "build": "yarn clean && yarn compile",
+    "clean": "rm -rf esm && rm -rf src/*.{js,d.ts,map}",
+    "compile": "tsc -p tsconfig.build.json",
     "test": "jest"
   }
 }

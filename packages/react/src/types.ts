@@ -1,5 +1,5 @@
 import type {ReactElement} from "react";
-import type {WrappedObservable} from "@atomar/wrapped/types";
+import type {WrappedObservable} from "@atomar/wrapped";
 
 export type RxProps<T> = {
     value$: WrappedObservable<T>

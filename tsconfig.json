@@ -1,40 +1,14 @@
 {
+  "extends": "./tsconfig.build.json",
   "compilerOptions": {
-    "target": "es6",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "strict": true,
-    "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true,
-    "module": "esnext",
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "jsx": "react-jsx",
-    "declaration": true,
-    "outDir": "esm",
+    "baseUrl": "./packages",
     "paths": {
-      "@atomar/atom": ["./packages/atom/src"],
-      "@atomar/atom/*": ["./packages/atom/src/*"],
-      "@atomar/utils": ["./packages/utils/src"],
-      "@atomar/utils/*":["./packages/utils/src/*"],
-      "@atomar/lens": ["./packages/lens/src"],
-      "@atomar/lens/*": ["./packages/lens/src/*"],
-      "@atomar/react": ["./packages/react/src"],
-      "@atomar/react/*": ["./packages/react/src/*"],
-      "@atomar/wrapped": ["./packages/wrapped/src"],
-      "@atomar/wrapped/*":["./packages/wrapped/src/*"]
+      "@atomar/atom": ["atom/src"],
+      "@atomar/utils": ["utils/src"],
+      "@atomar/lens": ["lens/src"],
+      "@atomar/react": ["react/src"],
+      "@atomar/wrapped": ["wrapped/src"],
+      "@atomar/*": ["*/src"]
     }
-  },
-  "include": [
-    "src/lib"
-  ],
-  "exclude": ["**/*.spec.ts", "**/*.test.ts"],
+  }
 }

@@ -11,11 +11,13 @@
     "access": "public"
   },
   "dependencies": {
-    "@atomar/wrapped": "^0.1.0"
+    "@atomar/wrapped": "^0.1.0",
+    "@types/react": "^17"
   },
   "scripts": {
-    "clean": "rm -rf esm",
-    "build": "yarn clean && tsc",
+    "build": "yarn clean && yarn compile",
+    "clean": "rm -rf esm && rm -rf src/*.{js,d.ts,map}",
+    "compile": "tsc -p tsconfig.build.json",
     "test": "jest"
   }
 }

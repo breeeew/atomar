@@ -165,21 +165,11 @@ export namespace Atom {
 
         return new Observable<ReadOnlyAtom<T>>(o => {
             const sub = new Subscription()
-
-            sub.add(
-                atomSubj
-                    .pipe(filter((x): x is Atom<T> => !!x))
-                    .subscribe(o)
-            )
-
-            sub.add(initAndUpdateAtom.subscribe(
-                undefined,
-                // propagate errors
-                e => o.error(e),
-                // propagate completion
-                () => o.complete()
-            ))
-
+            sub.add(atomSubj.pipe(filter((x): x is Atom<T> => !!x)).subscribe(o))
+            sub.add(initAndUpdateAtom.subscribe({
+                complete: () => o.complete(),
+                error: e => o.error(e),
+            }))
             return sub
         })
     }
