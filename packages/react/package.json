@@ -8,7 +8,7 @@
   "module": "esm",
   "license": "MIT",
   "dependencies": {
-    "@atomar/wrapped": "*"
+    "@atomar/wrapped": "^0.1.0"
   },
   "scripts": {
     "clean": "rm -rf esm",

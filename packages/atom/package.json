@@ -8,8 +8,8 @@
   "author": "Abdulla Bayramov",
   "license": "MIT",
   "dependencies": {
-    "@atomar/lens": "*",
-    "@atomar/utils": "*"
+    "@atomar/lens": "^0.1.0",
+    "@atomar/utils": "^0.1.0"
   },
   "scripts": {
     "clean": "rm -rf esm",
