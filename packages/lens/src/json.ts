@@ -12,7 +12,8 @@ import {
     Option,
 } from '@atomrx/utils'
 
-import { Lens, Prism } from './base'
+import { Lens } from './base'
+import nothing = Lens.nothing;
 
 // @NOTE only need this interface to add JSDocs for this call.
 export interface KeyImplFor<TObject> {
@@ -42,7 +43,7 @@ export interface KeyImplFor<TObject> {
  *
  * @param k the key to focus on
  */
-export function keyImpl<TValue = any>(k: string): Prism<{ [k: string]: TValue }, TValue>
+export function keyImpl<TValue = any>(k: string): Lens<{ [k: string]: TValue }, TValue>
 
 /**
  * Create a lens focusing on a key of an object.
@@ -83,24 +84,37 @@ export function keyImpl<TObject = any>(): KeyImplFor<TObject>
 export function keyImpl<TObject>(k?: string) {
     return k === undefined
         // type-safe key
-        ? <K extends keyof TObject>(k: K): Lens<TObject, TObject[K]> =>
-            Lens.create<TObject, TObject[K]>(
-                (s: TObject) => s[k],
-                (v: TObject[K], s: TObject) => setKey(k, v, s)
-            )
+        ? <K extends keyof TObject>(k: K): Lens<TObject, TObject[K]> => choose(xs => {
+            if (xs && k in xs) {
+                return Lens.create<TObject, TObject[K]>(
+                    (s: TObject) => s[k] as TObject[K],
+                    (v: TObject[K], s: TObject) => setKey(k, v, s)
+                )
+            }
+            return nothing()
+        })
+
         // untyped key
-        : Lens.create(
-            (s: { [k: string]: any }) => s[k] as Option<any>,
-            (v: any, s: { [k: string]: any }) => setKey(k, v, s)
-        )
+        : choose(xs => {
+            if (xs && typeof xs === 'object' && k in xs) {
+                return Lens.create(
+                    (s: { [k: string]: any }) => s[k] as Option<any>,
+                    (v: any, s: { [k: string]: any }) => {
+                        if (!s) return s
+                        return setKey(k, v, s)
+                    }
+                )
+            }
+            return nothing()
+        })
 }
 
-export function indexImpl<TItem>(i: number): Prism<TItem[], TItem> {
+export function indexImpl<TItem>(i: number): Lens<TItem[], TItem> {
     if (i < 0)
         throw new TypeError(`${i} is not a valid array index, expected >= 0`)
 
-    return Prism.create(
-        (xs: TItem[]) => xs[i] as Option<TItem>,
+    return Lens.create(
+        (xs: TItem[]) => xs[i],
         (v: TItem, xs: TItem[]) => {
             if (xs.length <= i) {
                 return xs.concat(Array(i - xs.length), [v])
@@ -132,8 +146,9 @@ export function replaceImpl<T>(originalValue: T, newValue: T): Lens<T, T> {
     )
 }
 
-export function findImpl<T>(predicate: (x: T) => boolean): Prism<T[], T> {
+export function findImpl<T>(predicate: (x: T) => boolean): Lens<T[], T> {
     return choose((xs: T[]) => {
+        if (!xs) return nothing<T[], T>()
         const i = findIndex(xs, predicate)
 
         return i < 0

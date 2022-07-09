@@ -171,6 +171,6 @@ export namespace Lens {
      * A lens that always returns `undefined` on `get` and does no change on `set`.
      */
     export function nothing<TSource, T>() {
-        return _nothing as Prism<TSource, T>
+        return _nothing as Lens<TSource, T>
     }
 }
