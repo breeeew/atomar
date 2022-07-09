@@ -2,6 +2,7 @@ src/*
 .idea
 README.md
 tsconfig.json
+tsconfig.build.json
 jest.config.js
-!./esm
-!./package.json
+!esm/*
+!package.json

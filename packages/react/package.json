@@ -19,5 +19,6 @@
     "clean": "rm -rf esm && rm -rf src/*.{js,d.ts,map}",
     "compile": "tsc -p tsconfig.build.json",
     "test": "jest"
-  }
+  },
+  "gitHead": "6a6523eea2a37209e62ce91418a9f4c6cf8ff359"
 }
