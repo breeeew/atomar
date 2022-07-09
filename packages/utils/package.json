@@ -1,6 +1,6 @@
 {
   "name": "@atomar/utils",
-  "version": "0.1.0",
+  "version": "0.1.1-alpha.0",
   "description": "Utils for whole project",
   "main": "esm/index.js",
   "types": "esm/index.d.ts",
