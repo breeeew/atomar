@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.build.json",
+  "compilerOptions": {
+    "outDir": "./esm"
+  },
+  "exclude": ["src/**/*.spec.ts"],
+  "include": [
+    "src/**/*"
+  ]
+}

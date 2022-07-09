@@ -1,28 +1,14 @@
 {
+  "extends": "./tsconfig.build.json",
   "compilerOptions": {
-    "target": "es6",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "strict": true,
-    "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true,
-    "module": "esnext",
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "jsx": "react-jsx",
-    "declaration": true,
-    "outDir": "esm"
-  },
-  "include": [
-    "src/lib"
-  ],
-  "exclude": ["**/*.spec.ts", "**/*.test.ts"]
+    "baseUrl": "./packages",
+    "paths": {
+      "@atomrx/atom": ["atom/src"],
+      "@atomrx/utils": ["utils/src"],
+      "@atomrx/lens": ["lens/src"],
+      "@atomrx/react": ["react/src"],
+      "@atomrx/wrapped": ["wrapped/src"],
+      "@atomrx/*": ["*/src"]
+    }
+  }
 }

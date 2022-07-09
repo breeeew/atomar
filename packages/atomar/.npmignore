@@ -1,8 +1,10 @@
 src/*
+tests/*
 .idea
 README.md
 tsconfig.json
 tsconfig.build.json
 jest.config.js
+*.lock
 !esm/*
 !package.json
