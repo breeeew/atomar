@@ -1,6 +1,6 @@
 {
   "name": "@atomar/lens",
-  "version": "0.1.1-alpha.0",
+  "version": "0.1.1-alpha.1",
   "description": "Lenses",
   "main": "esm/index.js",
   "types": "esm/index.d.ts",
@@ -11,7 +11,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@atomar/utils": "^0.1.1-alpha.0"
+    "@atomar/utils": "^0.1.1-alpha.1"
   },
   "scripts": {
     "build": "yarn clean && yarn compile",

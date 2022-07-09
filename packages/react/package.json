@@ -1,6 +1,6 @@
 {
   "name": "@atomar/react",
-  "version": "0.1.1-alpha.0",
+  "version": "0.1.1-alpha.1",
   "description": "React bindings and utils",
   "author": "Abdulla Bayramov",
   "main": "esm/index.js",
@@ -11,7 +11,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@atomar/wrapped": "^0.1.1-alpha.0",
+    "@atomar/wrapped": "^0.1.1-alpha.1",
     "@types/react": "^17"
   },
   "scripts": {
