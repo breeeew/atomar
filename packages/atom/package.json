@@ -1,5 +1,5 @@
 {
-  "name": "@atomar/atom",
+  "name": "@atomrx/atom",
   "version": "0.1.1-alpha.2",
   "description": "Atoms",
   "main": "esm/index.js",
@@ -11,8 +11,8 @@
     "access": "public"
   },
   "dependencies": {
-    "@atomar/lens": "^0.1.1-alpha.2",
-    "@atomar/utils": "^0.1.1-alpha.2"
+    "@atomrx/lens": "^0.1.1-alpha.2",
+    "@atomrx/utils": "^0.1.1-alpha.2"
   },
   "peerDependencies": {
     "rxjs": "^7.5.5"
@@ -23,5 +23,5 @@
     "compile": "tsc -p tsconfig.build.json",
     "test": "jest"
   },
-  "gitHead": "6a6523eea2a37209e62ce91418a9f4c6cf8ff359"
+  "gitHead": "dc52c32a5c4585ba36505f62489ad892ab41ed7b"
 }

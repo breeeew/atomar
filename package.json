@@ -1,7 +1,7 @@
 {
-  "name": "@atomar/root",
+  "name": "@atomrx/root",
   "version": "0.0.12",
-  "description": "atomar is a small simple library based on rx.js and provides atoms concept and glue for react",
+  "description": "atomrx is a small simple library based on rx.js and provides atoms concept and glue for react",
   "module": "esm",
   "types": "./esm/index.d.ts",
   "main": "./esm/index.js",

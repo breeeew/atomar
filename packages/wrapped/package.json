@@ -1,5 +1,5 @@
 {
-  "name": "@atomar/wrapped",
+  "name": "@atomrx/wrapped",
   "version": "0.1.1-alpha.2",
   "description": "Wrapped atoms",
   "main": "esm/index.js",
@@ -19,5 +19,5 @@
     "compile": "tsc -p tsconfig.build.json",
     "test": "jest"
   },
-  "gitHead": "6a6523eea2a37209e62ce91418a9f4c6cf8ff359"
+  "gitHead": "dc52c32a5c4585ba36505f62489ad892ab41ed7b"
 }

@@ -10,7 +10,7 @@ import {
     conservatively,
     findIndex,
     Option,
-} from '@atomar/utils'
+} from '@atomrx/utils'
 
 import { Lens, Prism } from './base'
 

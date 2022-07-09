@@ -3,12 +3,12 @@
   "compilerOptions": {
     "baseUrl": "./packages",
     "paths": {
-      "@atomar/atom": ["atom/src"],
-      "@atomar/utils": ["utils/src"],
-      "@atomar/lens": ["lens/src"],
-      "@atomar/react": ["react/src"],
-      "@atomar/wrapped": ["wrapped/src"],
-      "@atomar/*": ["*/src"]
+      "@atomrx/atom": ["atom/src"],
+      "@atomrx/utils": ["utils/src"],
+      "@atomrx/lens": ["lens/src"],
+      "@atomrx/react": ["react/src"],
+      "@atomrx/wrapped": ["wrapped/src"],
+      "@atomrx/*": ["*/src"]
     }
   }
 }
