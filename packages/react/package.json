@@ -14,6 +14,9 @@
     "@atomrx/wrapped": "^0.1.1-alpha.4",
     "@types/react": "^17"
   },
+  "peerDependencies": {
+    "rxjs": "^7.5.5"
+  },
   "scripts": {
     "build": "yarn clean && yarn compile",
     "clean": "rm -rf esm && rm -rf src/*.{js,d.ts,map}",
