@@ -3,6 +3,8 @@ import { structEq, Option } from '@atomrx/utils'
 
 import { Observable, Subscriber, Subscription, BehaviorSubject, combineLatest } from 'rxjs'
 
+type InferAtomType<T> = Exclude<T, undefined>
+
 /**
  * Read-only atom.
  *
@@ -172,13 +174,7 @@ export interface Atom<T> extends ReadOnlyAtom<T> {
     /**
      * Create a lensed atom that's focused on a property of given name.
      */
-    lens<K extends T extends Option<infer TT>
-        ? keyof TT
-        : keyof T>(k: K): Atom<T extends Option<infer TT>
-            ? K extends keyof TT
-                ? TT[K]
-                : undefined
-            : T[K]>
+    lens<K extends keyof InferAtomType<T>>(k: K): Atom<T extends undefined ? undefined : InferAtomType<T>[K]>
 
     /**
      * Create a lensed atom that's focused on a given property path.

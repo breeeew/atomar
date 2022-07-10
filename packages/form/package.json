@@ -20,6 +20,7 @@
   "scripts": {
     "build": "yarn clean && yarn compile",
     "clean": "rm -rf esm && rm -rf src/*.{js,d.ts,map}",
-    "compile": "tsc -p tsconfig.build.json"
+    "compile": "tsc -p tsconfig.build.json",
+    "test": "jest"
   }
 }

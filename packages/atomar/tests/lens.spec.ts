@@ -22,7 +22,6 @@ describe('Lens', () => {
         const data: Data[] = [{value: 123, data: 'qwe'}, {value: 345, data: 'asd'}]
         const atom$ = Atom.create(data)
         const lens$ = atom$.lens(Lens.index(0)).lens('value')
-        // const lens1$ = atom$.lens(Lens.index(0)).lens(Lens.create(x => x.value, (v, s) => s))
         expect(lens$.get()).toBe(123)
         lens$.set(111)
         expect(lens$.get()).toBe(111)
@@ -30,7 +29,6 @@ describe('Lens', () => {
     })
     it('index undefined', () => {
         const data: Data[] = [{value: 123, data: 'qwe'}]
-        // , {value: 345, data: 'asd'}
         const atom$ = Atom.create(data)
         const lens$ = atom$.lens(Lens.index(1)).lens('value')
         const optional$ = atom$.lens(Lens.index(1)).lens('optional')
