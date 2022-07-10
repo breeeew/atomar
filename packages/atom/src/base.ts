@@ -172,7 +172,13 @@ export interface Atom<T> extends ReadOnlyAtom<T> {
     /**
      * Create a lensed atom that's focused on a property of given name.
      */
-    lens<K extends keyof T>(k: K): Atom<T[K]>
+    lens<K extends T extends Option<infer TT>
+        ? keyof TT
+        : keyof T>(k: K): Atom<T extends Option<infer TT>
+            ? K extends keyof TT
+                ? TT[K]
+                : undefined
+            : T[K]>
 
     /**
      * Create a lensed atom that's focused on a given property path.
@@ -242,9 +248,7 @@ export abstract class AbstractReadOnlyAtom<T>
     }
 }
 
-export abstract class AbstractAtom<T>
-    extends AbstractReadOnlyAtom<T>
-    implements Atom<T> {
+export abstract class AbstractAtom<T> extends AbstractReadOnlyAtom<T> implements Atom<T> {
     abstract modify(updateFn: (x: T) => T): void
 
     set(x: T) {

@@ -1,19 +1,13 @@
+/* eslint-disable no-plusplus */
 /**
  * Lenses for JSON data.
  *
  * @module
  */
-
-import {
-    structEq,
-    setKey,
-    conservatively,
-    findIndex,
-    Option,
-} from '@atomrx/utils'
-
-import { Lens } from './base'
-import nothing = Lens.nothing;
+import {structEq} from "@atomrx/utils"
+import { setKey, conservatively, findIndex, Option } from "./utils"
+import { Lens, Prism } from "./base"
+import { SimpleCache } from "./simple-cache"
 
 // @NOTE only need this interface to add JSDocs for this call.
 export interface KeyImplFor<TObject> {
@@ -27,15 +21,13 @@ export interface KeyImplFor<TObject> {
      * allow to specify only some of the type arguments.
      *
      * This is the second call, where you supply the key argument.
-     *
      * @example
      * interface SomeObject {
      *   someProp: number
      * }
      *
      * const lens = Lens.key<SomeObject>()('someProp')
-     */
-        <K extends keyof TObject>(k: K): Lens<TObject, TObject[K]>
+     */ <K extends keyof TObject>(k: K): Lens<TObject, TObject[K]>
 }
 
 /**
@@ -43,7 +35,7 @@ export interface KeyImplFor<TObject> {
  *
  * @param k the key to focus on
  */
-export function keyImpl<TValue = any>(k: string): Lens<{ [k: string]: TValue }, TValue>
+export function keyImpl<TValue = any>(k: string): Prism<{ [k: string]: TValue }, TValue>
 
 /**
  * Create a lens focusing on a key of an object.
@@ -83,48 +75,16 @@ export function keyImpl<TObject = any>(): KeyImplFor<TObject>
 
 export function keyImpl<TObject>(k?: string) {
     return k === undefined
-        // type-safe key
-        ? <K extends keyof TObject>(k: K): Lens<TObject, TObject[K]> => choose(xs => {
-            if (xs && k in xs) {
-                return Lens.create<TObject, TObject[K]>(
-                    (s: TObject) => s[k] as TObject[K],
-                    (v: TObject[K], s: TObject) => setKey(k, v, s)
-                )
-            }
-            return nothing()
-        })
-
-        // untyped key
-        : choose(xs => {
-            if (xs && typeof xs === 'object' && k in xs) {
-                return Lens.create(
-                    (s: { [k: string]: any }) => s[k] as Option<any>,
-                    (v: any, s: { [k: string]: any }) => {
-                        if (!s) return s
-                        return setKey(k, v, s)
-                    }
-                )
-            }
-            return nothing()
-        })
+        ? // type-safe key
+        <K extends keyof TObject>(k: K): Lens<TObject, TObject[K]> =>
+            keyCache.getOrCreate(k as string) as Lens<TObject, TObject[K]>
+        : // untyped key
+        keyCache.getOrCreate(k)
 }
 
-export function indexImpl<TItem>(i: number): Lens<TItem[], TItem> {
-    if (i < 0)
-        throw new TypeError(`${i} is not a valid array index, expected >= 0`)
-
-    return Lens.create(
-        (xs: TItem[]) => xs[i],
-        (v: TItem, xs: TItem[]) => {
-            if (xs.length <= i) {
-                return xs.concat(Array(i - xs.length), [v])
-            } else if (structEq(v, xs[i])) {
-                return xs
-            } else {
-                return xs.slice(0, i).concat([v], xs.slice(i + 1))
-            }
-        }
-    )
+export function indexImpl<TItem>(i: number): Prism<TItem[], TItem> {
+    if (i < 0) throw new TypeError(`${i} is not a valid array index, expected >= 0`)
+    return indexCache.getOrCreate(i)
 }
 
 export function withDefaultImpl<T>(defaultValue: T): Lens<Option<T>, T> {
@@ -132,28 +92,17 @@ export function withDefaultImpl<T>(defaultValue: T): Lens<Option<T>, T> {
     return Lens.replace(undefined, defaultValue) as Lens<Option<T>, T>
 }
 
-function choose<T, U>(getLens: (state: T) => Lens<T, U>): Lens<T, U> {
-    return Lens.create(
-        (s: T) => getLens(s).get(s),
-        (v: U, s: T) => getLens(s).set(v, s)
-    )
-}
-
 export function replaceImpl<T>(originalValue: T, newValue: T): Lens<T, T> {
     return Lens.create<T, T>(
-        x => structEq(x, originalValue) ? newValue : x,
-        conservatively((y: T) => structEq(y, newValue) ? originalValue : y)
+        x => (structEq(x, originalValue) ? newValue : x),
+        conservatively((y: T) => (structEq(y, newValue) ? originalValue : y))
     )
 }
 
-export function findImpl<T>(predicate: (x: T) => boolean): Lens<T[], T> {
-    return choose((xs: T[]) => {
-        if (!xs) return nothing<T[], T>()
+export function findImpl<T>(predicate: (x: T) => boolean): Prism<T[], T> {
+    return Lens.choose((xs: T[]) => {
         const i = findIndex(xs, predicate)
-
-        return i < 0
-            ? Lens.nothing<T[], T>()
-            : Lens.index<T>(i)
+        return i < 0 ? Lens.nothing<T[], T>() : Lens.index<T>(i)
     })
 }
 
@@ -161,7 +110,7 @@ export function findImpl<T>(predicate: (x: T) => boolean): Lens<T[], T> {
 // @TODO this doesn't look like the best way to do it. we only do it
 // for a nice consumer API with all lens function under the same namespace,
 // together with the lens type.
-declare module './base' {
+declare module "./base" {
     export namespace Lens {
         export let key: typeof keyImpl
 
@@ -201,3 +150,33 @@ Lens.index = indexImpl
 Lens.withDefault = withDefaultImpl
 Lens.replace = replaceImpl
 Lens.find = findImpl
+
+const keyCache = new SimpleCache<string, Lens<any, any>>(key => {
+    const lens = Lens.create<any, any>(
+        s => s[key],
+        (v, s) => setKey(key, v, s)
+    )
+    return Lens.choose(vv => {
+        if (vv == null) return Lens.nothing()
+        return lens
+    })
+})
+
+const indexCache = new SimpleCache<number, Lens<any[], any>>(i => {
+        const prism = Prism.create<any[], any>(
+            xs => xs[i],
+            (v, xs) => {
+                if (xs.length <= i) {
+                    return xs.concat(Array(i - xs.length), [v])
+                } else if (structEq(v, xs[i])) {
+                    return xs
+                } else {
+                    return xs.slice(0, i).concat([v], xs.slice(i + 1))
+                }
+            }
+        )
+        return Lens.choose((v) => {
+            if (v[i] == null) return Lens.nothing()
+            return prism
+        })
+})

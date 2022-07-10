@@ -4,6 +4,7 @@ import {Atom} from "@atomrx/atom";
 type Data = {
     value: number
     data: string
+    optional?: string
 }
 
 describe('Lens', () => {
@@ -21,10 +22,34 @@ describe('Lens', () => {
         const data: Data[] = [{value: 123, data: 'qwe'}, {value: 345, data: 'asd'}]
         const atom$ = Atom.create(data)
         const lens$ = atom$.lens(Lens.index(0)).lens('value')
+        // const lens1$ = atom$.lens(Lens.index(0)).lens(Lens.create(x => x.value, (v, s) => s))
         expect(lens$.get()).toBe(123)
         lens$.set(111)
         expect(lens$.get()).toBe(111)
         expect(atom$.get()).toEqual([{value: 111, data: 'qwe'}, {value: 345, data: 'asd'}])
+    })
+    it('index undefined', () => {
+        const data: Data[] = [{value: 123, data: 'qwe'}]
+        // , {value: 345, data: 'asd'}
+        const atom$ = Atom.create(data)
+        const lens$ = atom$.lens(Lens.index(1)).lens('value')
+        const optional$ = atom$.lens(Lens.index(1)).lens('optional')
+        expect(lens$.get()).toBe(undefined)
+        lens$.set(111)
+        expect(lens$.get()).toBe(undefined)
+        optional$.set('optional')
+        expect(optional$.get()).toBe(undefined)
+        expect(atom$.get()).toBe(data)
+
+        atom$.modify(v => [...v, {value: 345, data: 'asd'}])
+        expect(atom$.get()).toEqual([{value: 123, data: 'qwe'}, {value: 345, data: 'asd'}])
+        lens$.set(666)
+        expect(atom$.get()).toEqual([{value: 123, data: 'qwe'}, {value: 666, data: 'asd'}])
+        expect(lens$.get()).toBe(666)
+        optional$.set('optional1')
+        expect(atom$.get()).toEqual([{value: 123, data: 'qwe'}, {value: 666, data: 'asd', optional: 'optional1'}])
+        optional$.set(undefined)
+        expect(atom$.get()).toEqual([{value: 123, data: 'qwe'}, {value: 666, data: 'asd'}])
     })
     it('find', () => {
         const data: Data[] = [{value: 123, data: 'qwe'}, {value: 345, data: 'asd'}]
