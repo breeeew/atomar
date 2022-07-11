@@ -101,6 +101,7 @@ export function replaceImpl<T>(originalValue: T, newValue: T): Lens<T, T> {
 
 export function findImpl<T>(predicate: (x: T) => boolean): Prism<T[], T> {
     return Lens.choose((xs: T[]) => {
+        if (!xs) return Lens.nothing<T[], T>()
         const i = findIndex(xs, predicate)
         return i < 0 ? Lens.nothing<T[], T>() : Lens.index<T>(i)
     })

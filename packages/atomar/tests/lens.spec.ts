@@ -75,4 +75,43 @@ describe('Lens', () => {
         expect(lens$.get()).toBe('xxx')
         expect(atom$.get()).toEqual([{value: 123, data: 'qwe'}, {value: 345, data: 'asd'}, {value: 999, data: 'xxx'}])
     })
+    it('compose', () => {
+        const data = {
+            id: 1,
+            name: 'data',
+            values: [
+                {value: 123},
+            ],
+        }
+        const atom$ = Atom.create(data)
+        const lens$ = atom$.lens('values').lens(Lens.compose(
+            Lens.find(x => x.value === 111),
+            Lens.withDefault({value: 111}),
+        ))
+        expect(lens$.get()).toEqual({value: 111})
+        atom$.modify(v => ({
+            ...v,
+            values: [
+                ...v.values,
+                {value: 111},
+            ],
+        }))
+        expect(lens$.get()).toEqual({value: 111})
+        lens$.set({value: 333})
+        expect(lens$.get()).toEqual({value: 111})
+    })
+    it('nested', () => {
+        const data = {
+            id: 1,
+            name: 'data',
+            values: [
+                {value: 123, data: [{id: 1, nested: 'qwe'}]},
+            ],
+        }
+        const atom$ = Atom.create(data)
+        const lens$ = atom$.lens('values').lens(Lens.find(x => x.value === 1)).lens('data').lens(Lens.find(x => x.id === 2))
+        expect(lens$.get()).toBeUndefined()
+        lens$.modify(v => v ? ({...v, nested: 'asd'}) : v)
+        expect(atom$.get()).toEqual(data)
+    })
 })
