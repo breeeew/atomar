@@ -1,6 +1,6 @@
 {
   "name": "@atomrx/atom",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Atoms",
   "main": "esm/index.js",
   "types": "esm/index.d.ts",
@@ -11,7 +11,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@atomrx/lens": "^0.1.2",
+    "@atomrx/lens": "^0.1.3",
     "@atomrx/utils": "^0.1.1"
   },
   "peerDependencies": {
