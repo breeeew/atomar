@@ -16,8 +16,10 @@ export class FormStore<T> {
         if (cached) {
             return cached
         }
+        // @ts-ignore
         const created = new FormStore(this.value.lens(field), this.getChild(field))
         this.bindCache.set(field, created)
+        // @ts-ignore
         return created
     }
 

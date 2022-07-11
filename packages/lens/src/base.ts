@@ -173,4 +173,11 @@ export namespace Lens {
     export function nothing<TSource, T>() {
         return _nothing as Lens<TSource, T>
     }
+
+    export function choose<T, U>(getLens: (state: T) => Lens<T, U>): Lens<T, U> {
+        return Lens.create(
+            (s: T) => getLens(s).get(s),
+            (v: U, s: T) => getLens(s).set(v, s)
+        )
+    }
 }

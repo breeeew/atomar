@@ -1,6 +1,5 @@
 import Joi from "joi"
-import { filter, first, map, reduce, takeWhile } from "rxjs/operators"
-import {lastValueFrom, Observable, timer} from "rxjs"
+import {lastValueFrom, Observable, timer, filter, first, map, reduce, takeWhile} from "rxjs"
 import type { ValidationResult, ValidationResultError, ValidationResultSuccess, ValidationStatus } from "./types"
 import {Atom} from "@atomrx/atom";
 import {validateJoi} from "./validation"
@@ -11,8 +10,10 @@ interface SignUpForm {
     lastName: string
 }
 
+const firstNameSchema = Joi.string().required().min(2).max(100)
+
 const schema = Joi.object().keys({
-    firstName: Joi.string().required().min(2).max(100),
+    firstName: firstNameSchema,
     lastName: Joi.string().required(),
 })
 
