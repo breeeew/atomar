@@ -25,7 +25,6 @@ export function Rx<T>(props: RxProps<T>): React.ReactElement | null {
         }
         return null
     }
-
     const children = props.children(data.value)
     return children ? <>{children}</> : null
 }
