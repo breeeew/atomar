@@ -1,6 +1,6 @@
 {
   "name": "@atomrx/react",
-  "version": "0.1.1",
+  "version": "0.1.4",
   "description": "React bindings and utils",
   "author": "Abdulla Bayramov",
   "main": "esm/index.js",
