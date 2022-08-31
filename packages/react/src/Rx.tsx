@@ -6,18 +6,26 @@ export function Rx<T>(props: RxProps<T>): React.ReactElement | null {
     const data = useRx(props.value$)
 
     if (data.status === 'pending') {
-        if (props.pending) return <>{props.pending()}</>
+        if (props.pending) {
+            const pending = props.pending()
+            if (pending) return <>{pending}</>
+        }
         return null
     }
 
     if (data.status === 'rejected') {
-        return <>{props.rejected?.(data.error, data.reload) ?? data.error.message}</>
+        const rejected = props.rejected?.(data.error, data.reload)
+        return rejected ? <>{rejected}</> : <>{data.error.message}</>
     }
 
     if (data.status === 'idle') {
-        if (props.idle) return <>{props.idle()}</>
+        if (props.idle) {
+            const idle = props.idle()
+            if (idle) return <>{idle}</>
+        }
         return null
     }
 
-    return <>{props.children(data.value)}</>
+    const children = props.children(data.value)
+    return children ? <>{children}</> : null
 }
