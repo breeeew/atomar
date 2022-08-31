@@ -114,4 +114,37 @@ describe('Lens', () => {
         lens$.modify(v => v ? ({...v, nested: 'asd'}) : v)
         expect(atom$.get()).toEqual(data)
     })
+    it('nested set undefined', () => {
+        const data = {
+            id: 1,
+            name: 'data',
+            values: [
+                {value: 123, data: [{id: 1, nested: 'qwe'}]},
+            ],
+        }
+        const atom$ = Atom.create(data)
+        const lens$ = atom$.lens('values').lens(Lens.find(x => x.value === 123))
+        expect(lens$.get()).toEqual({value: 123, data: [{id: 1, nested: 'qwe'}]})
+        atom$.modify(x => ({...x, values: []}))
+        expect(lens$.get()).toBeUndefined()
+        lens$.set(undefined)
+        expect(atom$.get()).toEqual({...data, values: []})
+    })
+    it('nested set undefined 2', () => {
+        const data = {
+            id: 1,
+            name: 'data',
+            values: {
+                a: {b: 123},
+            },
+        }
+        const atom$ = Atom.create(data)
+        const lens$ = atom$.lens('values').lens('a').lens('b')
+        expect(lens$.get()).toBe(123)
+        atom$.modify(x => ({...x, values: undefined} as unknown as typeof data))
+        expect(lens$.get()).toBeUndefined()
+        lens$.set(321)
+        expect(lens$.get()).toBeUndefined()
+        expect(atom$.get()).toEqual({...data, values: undefined})
+    })
 })
