@@ -1,6 +1,6 @@
 {
   "name": "atomar",
-  "version": "1.0.0-alpha.2",
+  "version": "1.0.0-alpha.3",
   "description": "Atomar is a simple library based on rxjs and provides atoms and lenses concept (like haskel's lenses) and glue for react. Inspired by Focal and Rixio",
   "main": "esm/index.js",
   "types": "esm/index.d.ts",
@@ -14,7 +14,7 @@
     "@atomrx/atom": "^1.0.0-alpha.0",
     "@atomrx/form": "^1.0.0-alpha.0",
     "@atomrx/lens": "^1.0.0-alpha.0",
-    "@atomrx/react": "^1.0.0-alpha.2",
+    "@atomrx/react": "^1.0.0-alpha.3",
     "@atomrx/utils": "^1.0.0-alpha.0",
     "@atomrx/wrapped": "^0.1.1"
   },
