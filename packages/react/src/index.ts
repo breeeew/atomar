@@ -7,7 +7,7 @@ import React from "react";
 import jsxRuntime from "react/jsx-runtime";
 import jsxRuntimeDev from "react/jsx-dev-runtime";
 import {useSyncExternalStore} from "use-sync-external-store/shim";
-import {JsonAtom} from "@atomrx/atom/src/base";
+import {JsonAtom} from "@atomrx/atom/esm/base";
 
 export {Rx} from './Rx'
 export {RxIf} from './RxIf'
