@@ -45,7 +45,7 @@ const ProxyHandlers = {
         } finally {
             // Stop effects in either case before return or throw,
             // Otherwise the effect will leak.
-            stop();
+            // stop();
         }
     },
 };
@@ -144,8 +144,8 @@ JsxPro.jsxs && /*  */ (JsxPro.jsxs = WrapJsx(JsxPro.jsxs));
 JsxDev.jsxDEV && /**/ (JsxDev.jsxDEV = WrapJsx(JsxDev.jsxDEV));
 JsxPro.jsxDEV && /**/ (JsxPro.jsxDEV = WrapJsx(JsxPro.jsxDEV));
 
-function Text({ data }: { data: JsonAtom<string | number | null> }) {
-    return React.createElement(React.Fragment, null, {children: data.get()});
+function Text({ data }: { data: unknown }) {
+    return data;
 }
 
 Object.defineProperties(JsonAtom.prototype, {
@@ -154,7 +154,7 @@ Object.defineProperties(JsonAtom.prototype, {
     props: {
         configurable: true,
         get() {
-            return { data: this };
+            return { data: this.get() };
         },
     },
     ref: { configurable: true, value: null },
