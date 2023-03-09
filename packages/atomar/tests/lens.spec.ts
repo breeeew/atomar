@@ -127,7 +127,7 @@ describe('Lens', () => {
         expect(lens$.get()).toEqual({value: 123, data: [{id: 1, nested: 'qwe'}]})
         atom$.modify(x => ({...x, values: []}))
         expect(lens$.get()).toBeUndefined()
-        lens$.set(undefined)
+        lens$.set({value: 321, data: []})
         expect(atom$.get()).toEqual({...data, values: []})
     })
     it('nested set undefined 2', () => {
