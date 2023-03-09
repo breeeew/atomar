@@ -144,7 +144,7 @@ JsxPro.jsxs && /*  */ (JsxPro.jsxs = WrapJsx(JsxPro.jsxs));
 JsxDev.jsxDEV && /**/ (JsxDev.jsxDEV = WrapJsx(JsxDev.jsxDEV));
 JsxPro.jsxDEV && /**/ (JsxPro.jsxDEV = WrapJsx(JsxPro.jsxDEV));
 
-function Text({ data }: { data: unknown }) {
+function Text({ data }: { data: React.ReactElement<any, any> | null }) {
     return data;
 }
 
