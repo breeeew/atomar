@@ -2,11 +2,16 @@
   "name": "@atomrx/rx",
   "version": "0.2.0",
   "description": "RxJS operators and utilities for atomar",
-  "main": "./esm/index.js",
+  "main": "esm/index.js",
+  "types": "esm/index.d.ts",
+  "module": "esm",
   "repository": "https://github.com/breeeew/atomar",
   "author": "Abdulla Bayramov",
   "license": "MIT",
   "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "yarn clean && yarn compile",
     "clean": "rm -rf esm && rm -rf src/*.{js,d.ts,map}",
@@ -16,5 +21,6 @@
     "@atomrx/lens": "^0.2.0",
     "@atomrx/utils": "^0.2.0",
     "rxjs": "^7.8.0"
-  }
+  },
+  "gitHead": "fd9f22f2aff87d4286ca9809e3c9f54c8590464f"
 }
