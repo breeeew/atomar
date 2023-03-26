@@ -1,7 +1,10 @@
 import {equals as structEq} from "./structEq"
-export {equals as structEq} from "./structEq"
+import {assertAndReturn} from "./assertions";
 
-export function setKey<T, K extends keyof T>(k: K, v: T[K], o: T): T {
+export {equals as structEq} from "./structEq"
+export * from "./assertions"
+
+export function setKey<T extends object, K extends keyof T>(k: K, v: T[K], o: T): T {
     if (k in o && structEq(v, o[k])) {
         return o
     } else {
@@ -32,7 +35,8 @@ export function conservatively<T, U>(fn: ((y: T, c0: U) => U)) {
 
 export function findIndex<T>(xs: T[], p: (x: T) => boolean): number {
     for (let i = 0; i < xs.length; i++) {
-        if (p(xs[i])) return i
+        const item = assertAndReturn(xs[i])
+        if (p(item)) return i
     }
     return -1
 }

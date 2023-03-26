@@ -2,6 +2,9 @@
   "extends": "./tsconfig.build.json",
   "compilerOptions": {
     "baseUrl": "./packages",
+    "strict": true,
+    "noImplicitAny": true,
+    "noUncheckedIndexedAccess": true,
     "paths": {
       "@atomrx/atom": ["atom/src"],
       "@atomrx/utils": ["utils/src"],
@@ -10,5 +13,5 @@
       "@atomrx/wrapped": ["wrapped/src"],
       "@atomrx/*": ["*/src"]
     }
-  }
+  },
 }

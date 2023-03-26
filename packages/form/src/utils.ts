@@ -18,7 +18,10 @@ export function createValidationResult<T>(
             },
             {status: "validating"} as ValidationResultValidating
         ),
-        shareReplay(1)
+        shareReplay({
+            refCount: true,
+            bufferSize: 1,
+        })
     )
 }
 

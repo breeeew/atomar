@@ -1,6 +1,6 @@
 import Joi from "joi"
 import {lastValueFrom, Observable, timer, filter, first, map, reduce, takeWhile} from "rxjs"
-import type { ValidationResult, ValidationResultError, ValidationResultSuccess, ValidationStatus } from "./types"
+import type { ValidationResult, ValidationResultError, ValidationStatus } from "./types"
 import {Atom} from "@atomrx/atom";
 import {validateJoi} from "./validation"
 import {FormStore} from "./FormStore"
@@ -53,8 +53,7 @@ describe("FormStore", () => {
 
         const withError = await lastValueFrom(firstNameValidation
             .pipe(
-                filter(x => x.status === "error"),
-                map(x => x as ValidationResultError<string>),
+                filter((x): x is ValidationResultError<string> => x.status === "error"),
                 first()
             ))
         expect(withError.error).toBe('"firstName" is not allowed to be empty')
@@ -66,7 +65,6 @@ describe("FormStore", () => {
         const success = await lastValueFrom(firstNameValidation
             .pipe(
                 filter(x => x.status === "success"),
-                map(x => x as ValidationResultSuccess),
                 first()
             ))
         expect(success.status).toBe("success")
@@ -79,8 +77,8 @@ describe("FormStore", () => {
 
         const tillError = await collectTill(form.validationResult, "error")
         expect(tillError.length).toBe(2)
-        expect(tillError[0].status).toBe("validating")
-        expect(tillError[1].status).toBe("error")
+        expect(tillError[0]?.status).toBe("validating")
+        expect(tillError[1]?.status).toBe("error")
     })
 
     it("should display validating status while perform async validation (with Observable)", async () => {
@@ -107,12 +105,12 @@ describe("FormStore", () => {
         await collectTill(form.validationResult, "success")
         const tillError = await collectTill(form.validationResult, "error")
         expect(tillError.length).toBe(2)
-        expect(tillError[0].status).toBe("success")
-        expect(tillError[1].status).toBe("error")
+        expect(tillError[0]?.status).toBe("success")
+        expect(tillError[1]?.status).toBe("error")
     })
 
-    it("if there is error, no validation status should be emitted", async () => {
-        expect.assertions(4)
+    it("if there is error, validation status should be emitted after corrected to valid state", async () => {
+        expect.assertions(3)
         const atom = createSignUpAtom()
         const form = FormStore.create(atom, validateAsync)
 
@@ -121,10 +119,9 @@ describe("FormStore", () => {
         atom.lens("lastName").set("Last name")
 
         const results = await collectTill(form.validationResult, "success")
-        expect(results.length).toBe(3)
-        expect(results[0].status).toBe("error")
-        expect(results[1].status).toBe("error")
-        expect(results[2].status).toBe("success")
+        expect(results.length).toBe(2)
+        expect(results[0]?.status).toBe("validating")
+        expect(results[1]?.status).toBe("success")
     })
 
     it("validating should be emitted after success", async () => {
@@ -137,7 +134,7 @@ describe("FormStore", () => {
 
         const results = await collectTill(form.validationResult, "error")
         expect(results.length).toBe(2)
-        expect(results[0].status).toBe("validating")
-        expect(results[1].status).toBe("error")
+        expect(results[0]?.status).toBe("validating")
+        expect(results[1]?.status).toBe("error")
     })
 })

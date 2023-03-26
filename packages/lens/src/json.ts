@@ -4,8 +4,7 @@
  *
  * @module
  */
-import {structEq} from "@atomrx/utils"
-import { setKey, conservatively, findIndex, Option } from "./utils"
+import {structEq, setKey, conservatively, findIndex, Option} from "@atomrx/utils"
 import { Lens, Prism } from "./base"
 import { SimpleCache } from "./simple-cache"
 

@@ -1,21 +1,21 @@
 import {Atom} from "@atomrx/atom"
 import {map, Observable} from "rxjs"
-import type {ValidationResult, ValidationResultValidating, ValidationResultSuccess, Validate} from "./types"
+import type {ValidationResult, Validate} from "./types"
 import {createValidationResult} from "./utils"
+import {assertAndReturn} from "@atomrx/utils";
 
 export class FormStore<T> {
-    canSubmit$: Observable<boolean>
+    readonly canSubmit$ = this.validationResult.pipe(map(it => it.status === "success"))
     private readonly bindCache: Map<keyof T, FormStore<any>> = new Map()
 
-    constructor(public readonly value: Atom<T>, public readonly validationResult: Observable<ValidationResult<T>>) {
-        this.canSubmit$ = this.validationResult.pipe(map(it => it.status === "success"))
-    }
+    constructor(
+        readonly value: Atom<T>,
+        readonly validationResult: Observable<ValidationResult<T>>,
+    ) {}
 
     bind<K extends keyof T>(field: K): FormStore<T[K]> {
         const cached = this.bindCache.get(field)
-        if (cached) {
-            return cached
-        }
+        if (cached) return cached
         // @ts-ignore
         const created = new FormStore(this.value.lens(field), this.getChild(field))
         this.bindCache.set(field, created)
@@ -23,16 +23,16 @@ export class FormStore<T> {
         return created
     }
 
-    private getChild<K extends keyof T>(field: K) {
+    private getChild<K extends keyof T>(field: K): Observable<ValidationResult<T[K]>> {
         return this.validationResult.pipe(
             map(x => {
                 if (x.status === "validating") {
-                    return { status: "validating" } as ValidationResultValidating
+                    return { status: "validating" }
                 }
                 if (x.status === "error" && x.children?.[field]) {
-                    return x.children[field] as ValidationResult<T[K]>
+                    return assertAndReturn(x.children[field]!)
                 }
-                return { status: "success" } as ValidationResultSuccess
+                return { status: "success" }
             })
         )
     }

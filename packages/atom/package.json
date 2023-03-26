@@ -15,7 +15,7 @@
     "@atomrx/utils": "^0.1.1"
   },
   "peerDependencies": {
-    "rxjs": "^7.5.5"
+    "rxjs": "^7.8.0"
   },
   "scripts": {
     "build": "yarn clean && yarn compile",

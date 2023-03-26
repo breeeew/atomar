@@ -25,6 +25,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+import {assertAndReturn} from "./assertions";
 
 function arrayFromIterator<T>(iter: Iterator<T>) {
     const result: T[] = []
@@ -136,7 +137,7 @@ const keys = ((function () {
             if (hasEnumBug) {
                 nIdx = nonEnumerableProps.length - 1
                 while (nIdx >= 0) {
-                    prop = nonEnumerableProps[nIdx]
+                    prop = assertAndReturn(nonEnumerableProps[nIdx])
                     if (has(prop, obj) && !contains(ks, prop)) {
                         ks[ks.length] = prop
                     }
@@ -284,7 +285,7 @@ export function equals(a: any, b: any, stackA: any[] = [], stackB: any[] = []) {
     stackB.push(b)
     idx = keysA.length - 1
     while (idx >= 0) {
-        const key = keysA[idx]
+        const key = assertAndReturn(keysA[idx])
 
         if (!(has(key, b) && equals(b[key], a[key], stackA, stackB)))
             return false

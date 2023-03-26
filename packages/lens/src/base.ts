@@ -1,4 +1,5 @@
 import type { Option } from '@atomrx/utils'
+import { assertAndReturn } from '@atomrx/utils'
 
 export interface Optic<TSource, T, U> {
     get(s: TSource): T
@@ -146,9 +147,9 @@ export namespace Lens {
         if (lenses.length === 0) {
             throw new TypeError('Can not compose zero lenses. You probably want `Lens.identity`.')
         } else if (lenses.length === 1) {
-            return lenses[0]
+            return assertAndReturn(lenses[0])
         } else {
-            let r = lenses[0]
+            let r = assertAndReturn(lenses[0])
             lenses.slice(1).forEach(l => {
                 r = r.compose(l)
             })
