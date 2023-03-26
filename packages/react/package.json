@@ -1,6 +1,6 @@
 {
   "name": "@atomrx/react",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "description": "React bindings and utils",
   "author": "Abdulla Bayramov",
   "main": "esm/index.js",
@@ -11,7 +11,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@atomrx/wrapped": "^0.2.0",
+    "@atomrx/wrapped": "^1.0.0",
     "@types/react": "^17"
   },
   "peerDependencies": {

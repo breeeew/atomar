@@ -1,6 +1,6 @@
 {
   "name": "@atomrx/rx",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "description": "RxJS operators and utilities for atomar",
   "main": "esm/index.js",
   "types": "esm/index.d.ts",
@@ -18,8 +18,8 @@
     "compile": "tsc -p tsconfig.build.json"
   },
   "dependencies": {
-    "@atomrx/lens": "^0.2.0",
-    "@atomrx/utils": "^0.2.0",
+    "@atomrx/lens": "^1.0.0",
+    "@atomrx/utils": "^1.0.0",
     "rxjs": "^7.8.0"
   },
   "gitHead": "fd9f22f2aff87d4286ca9809e3c9f54c8590464f"
