@@ -1,5 +1,5 @@
 import {Atom} from "@atomrx/atom";
-import {Subscription} from "rxjs";
+import {combineLatest, filter, Subscription} from "rxjs";
 import {wait} from "./utils";
 
 describe('Atom', () => {
@@ -52,4 +52,36 @@ describe('Atom', () => {
         expect(callbackMock).toHaveBeenCalledWith({value: 345})
         expect(callbackMock).toHaveBeenCalledWith({value: 346})
     })
+
+    it("should handle issue with tail notification in case of loops", () => {
+        const spyAfterEffect = jest.fn();
+        const spyBeforeEffect = jest.fn();
+        const subs = new Subscription();
+        const atomA$ = Atom.create<number>(0);
+        const atomB$ = Atom.create<number | undefined>(undefined);
+
+
+        subs.add(atomB$.subscribe(spyBeforeEffect));
+
+        subs.add(combineLatest([atomA$, atomB$])
+            .pipe(
+                filter(([a, b]) => {
+                    return b === undefined;
+                }),
+            )
+            .subscribe(([a]) => {
+                atomB$.set(a);
+                atomA$.modify((a) => ++a);
+            })
+        );
+
+        subs.add(atomB$.subscribe(spyAfterEffect));
+
+        atomB$.set(undefined);
+
+        expect(spyBeforeEffect.mock.calls).toEqual([[undefined], [0], [undefined], [1]]);
+        expect(spyAfterEffect.mock.calls).toEqual([[0], [1]]);
+
+        subs.unsubscribe();
+    });
 })

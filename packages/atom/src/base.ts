@@ -261,28 +261,67 @@ export abstract class AbstractAtom<T> extends AbstractReadOnlyAtom<T> implements
     }
 }
 
+let clock = 0;
+
 export class JsonAtom<T> extends AbstractAtom<T> {
+    private latestValue: {
+        value: T,
+        time: number;
+    };
+
+    private internalSubj: BehaviorSubject<{
+        value: T,
+        time: number;
+    }>
+
     constructor(initialValue: T) {
         super(initialValue)
+        this.latestValue = {
+            value: initialValue,
+            time: clock++
+        }
+        this.internalSubj = new BehaviorSubject(this.latestValue)
     }
 
     get() {
-        return this.getValue()
+        return this.latestValue.value;
     }
 
     modify(updateFn: (x: T) => T) {
-        const prevValue = this.getValue()
+        const prevValue = this.get()
         const next = updateFn(prevValue)
 
-        if (!structEq(prevValue, next))
-            this.next(next)
+        if (!structEq(prevValue, next)) {
+
+            this.latestValue = {
+                value: next,
+                time: clock++
+            }
+            this.internalSubj.next(this.latestValue)
+        }
     }
 
     set(x: T) {
-        const prevValue = this.getValue()
+        const prevValue = this.get()
 
-        if (!structEq(prevValue, x))
-            this.next(x)
+        if (!structEq(prevValue, x)) {
+            this.latestValue = {
+                value: x,
+                time: clock++
+            }
+            this.internalSubj.next(this.latestValue)
+        }
+
+    }
+
+    protected _subscribe(subscriber: Subscriber<T>) {
+        subscriber.add(this.internalSubj.subscribe(data => {
+            if (data.time >= this.latestValue.time) {
+                subscriber.next(data.value)
+            }
+        }))
+
+        return subscriber
     }
 }
 
