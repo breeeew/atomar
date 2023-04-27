@@ -1,6 +1,6 @@
 {
   "name": "@atomrx/form",
-  "version": "1.0.0",
+  "version": "1.0.1-alpha.0",
   "description": "Atoms",
   "main": "esm/index.js",
   "types": "esm/index.d.ts",
@@ -11,7 +11,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@atomrx/atom": "^1.0.0",
+    "@atomrx/atom": "^1.0.1-alpha.0",
     "@atomrx/utils": "^1.0.0"
   },
   "peerDependencies": {

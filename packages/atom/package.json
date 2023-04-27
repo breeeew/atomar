@@ -1,6 +1,6 @@
 {
   "name": "@atomrx/atom",
-  "version": "1.0.0",
+  "version": "1.0.1-alpha.0",
   "description": "Atoms",
   "main": "esm/index.js",
   "types": "esm/index.d.ts",
