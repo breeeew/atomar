@@ -291,37 +291,15 @@ export class JsonAtom<T> extends AbstractAtom<T> {
         const prevValue = this.get()
         const next = updateFn(prevValue)
 
-        if (!structEq(prevValue, next)) {
-
-            this.latestValue = {
-                value: next,
-                time: clock++
-            }
-            this.internalSubj.next(this.latestValue)
-        }
+        if (!structEq(prevValue, next))
+            this.next(next)
     }
 
     set(x: T) {
         const prevValue = this.get()
 
-        if (!structEq(prevValue, x)) {
-            this.latestValue = {
-                value: x,
-                time: clock++
-            }
-            this.internalSubj.next(this.latestValue)
-        }
-
-    }
-
-    protected _subscribe(subscriber: Subscriber<T>) {
-        subscriber.add(this.internalSubj.subscribe(data => {
-            if (data.time >= this.latestValue.time) {
-                subscriber.next(data.value)
-            }
-        }))
-
-        return subscriber
+        if (!structEq(prevValue, x))
+            this.next(x)
     }
 
     override next(value: T) {
