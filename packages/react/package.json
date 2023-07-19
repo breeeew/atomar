@@ -1,6 +1,6 @@
 {
   "name": "@atomrx/react",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "React bindings and utils",
   "author": "Abdulla Bayramov",
   "main": "esm/index.js",
@@ -12,9 +12,9 @@
   },
   "dependencies": {
     "@atomrx/wrapped": "^1.0.0",
-    "use-sync-external-store": "^1.2.0",
     "@types/react": "^17",
-    "@types/use-sync-external-store": "^0.0.3"
+    "@types/use-sync-external-store": "^0.0.3",
+    "use-sync-external-store": "^1.2.0"
   },
   "peerDependencies": {
     "rxjs": "^7.5.5"
