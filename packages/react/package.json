@@ -12,7 +12,9 @@
   },
   "dependencies": {
     "@atomrx/wrapped": "^1.0.0",
-    "@types/react": "^17"
+    "use-sync-external-store": "^1.2.0",
+    "@types/react": "^17",
+    "@types/use-sync-external-store": "^0.0.3"
   },
   "peerDependencies": {
     "rxjs": "^7.5.5"
