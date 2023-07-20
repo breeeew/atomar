@@ -54,26 +54,15 @@ describe('useRx hook', () => {
     })
 
     it('should not show pending value after observable switch if new value available synchronous', () => {
-        const sub1 = jest.fn();
-        const sub2 = jest.fn();
 
-        const obs1$ = (new BehaviorSubject(1)).pipe(tap({
-            subscribe: sub1
-        }));
-        const obs2$ = new BehaviorSubject(2).pipe(tap({
-            subscribe: sub2
-        }));
+        const obs1$ = new BehaviorSubject(1);
+        const obs2$ = new BehaviorSubject(2);
 
         const view = renderHook((props) => useRx(props), {
             initialProps: obs1$
         })
 
         view.rerender(obs2$);
-
-
-        expect(sub1).toHaveBeenCalledTimes(1);
-        expect(sub2).toHaveBeenCalledTimes(1);
-
 
         expect(view.result.all.length).toBe(2);
 
@@ -83,15 +72,9 @@ describe('useRx hook', () => {
     })
 
     it('should show pending value after observable switch if new value unavailable synchronous', () => {
-        const sub1 = jest.fn();
-        const sub2 = jest.fn();
 
-        const obs1$ = (new BehaviorSubject(1)).pipe(tap({
-            subscribe: sub1
-        }));
-        const obs2$ = (new Subject<number>()).pipe(tap({
-            subscribe: sub2
-        }));
+        const obs1$ = new BehaviorSubject(1).asObservable()
+        const obs2$ = new Subject<number>().asObservable();
 
         const view = renderHook((props) => useRx(props), {
             initialProps: obs1$
@@ -100,15 +83,12 @@ describe('useRx hook', () => {
         view.rerender(obs2$);
 
 
-        expect(sub1).toHaveBeenCalledTimes(1);
-        expect(sub2).toHaveBeenCalledTimes(1);
-
-
         expect(view.result.all.length).toBe(2);
 
         expect(view.result.all).toEqual([createFulfilledWrapped(1), pendingWrapped]);
 
         view.unmount();
+
     })
 
     it('should work normal when observables emits undefined as value', async () => {
@@ -128,5 +108,45 @@ describe('useRx hook', () => {
         expect(view.result.all).toEqual([pendingWrapped, createFulfilledWrapped(undefined)]);
 
         view.unmount();
+    })
+
+    it('should not introduce memory leaks with hanging subscriptions', () => {
+        const sub1 = jest.fn();
+        const sub2 = jest.fn();
+        const sub3 = jest.fn();
+        const unsub1 = jest.fn();
+        const unsub2 = jest.fn();
+        const unsub3 = jest.fn();
+
+        const obs1$ = (new BehaviorSubject(1)).pipe(tap({
+            subscribe: sub1,
+            unsubscribe: unsub1
+        }));
+        const obs2$ = (new Subject<number>()).pipe(tap({
+            subscribe: sub2,
+            unsubscribe: unsub2
+        }));
+        const obs3$ = (new Subject<number>()).pipe(tap({
+            subscribe: sub3,
+            unsubscribe: unsub3
+        }));
+
+        const view = renderHook((props) => useRx(props), {
+            initialProps: obs1$
+        })
+
+        expect(sub1).toHaveBeenCalledTimes(1);
+
+        view.rerender(obs2$);
+        expect(unsub1).toHaveBeenCalledTimes(1);
+        expect(sub2).toHaveBeenCalledTimes(1);
+
+        view.rerender(obs3$);
+        expect(sub3).toHaveBeenCalledTimes(1);
+        expect(unsub2).toHaveBeenCalledTimes(1);
+
+        view.unmount();
+
+        expect(unsub3).toHaveBeenCalledTimes(1);
     })
 })

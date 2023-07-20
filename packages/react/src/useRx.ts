@@ -1,4 +1,4 @@
-import {useRef, useCallback, useMemo} from "react"
+import {useRef, useCallback, useMemo, useEffect} from "react"
 import {pendingWrapped, wrap} from "@atomrx/wrapped";
 import {Wrapped, WrappedObservable} from "@atomrx/wrapped";
 import {useSyncExternalStore} from 'use-sync-external-store/shim'
@@ -84,6 +84,14 @@ export function useRx<T>(source: WrappedObservable<T>): Wrapped<T> {
 
         [wrappedSource]
     );
+
+    useEffect(() => {
+        return () => {
+            if (ref.current.sub) {
+                ref.current.sub.unsubscribe()
+            }
+        }
+    }, [])
 
     return useSyncExternalStore(subscribe, get);
 }
