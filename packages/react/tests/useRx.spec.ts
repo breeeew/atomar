@@ -110,4 +110,23 @@ describe('useRx hook', () => {
 
         view.unmount();
     })
+
+    it('should work normal when observables emits undefined as value', async () => {
+        const obs$ = new Subject<void>();
+
+        const view = renderHook((props) => useRx(props), {
+            initialProps: obs$
+        })
+
+        expect(view.result.all.length).toBe(1);
+
+
+        obs$.next();
+
+        expect(view.result.all.length).toBe(2);
+
+        expect(view.result.all).toEqual([pendingWrapped, createFulfilledWrapped(undefined)]);
+
+        view.unmount();
+    })
 })
