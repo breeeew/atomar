@@ -22,7 +22,8 @@
   "scripts": {
     "build": "yarn clean && yarn compile",
     "clean": "rm -rf esm && rm -rf src/*.{js,d.ts,map}",
-    "compile": "tsc -p tsconfig.build.json"
+    "compile": "tsc -p tsconfig.build.json",
+    "test": "jest"
   },
   "gitHead": "fd9f22f2aff87d4286ca9809e3c9f54c8590464f"
 }
