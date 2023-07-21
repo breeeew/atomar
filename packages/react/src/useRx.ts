@@ -5,7 +5,7 @@ import {useSyncExternalStore} from 'use-sync-external-store/shim'
 import {Observable, shareReplay, Subscription} from "rxjs";
 
 function toObsWithSyncGetter<T>(observable: Observable<T>) {
-    let nextValue: T | undefined;
+    let nextValue: T | undefined = undefined;
 
     return {
         source: new Observable<T>((s) => {
