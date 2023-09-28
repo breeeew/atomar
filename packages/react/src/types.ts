@@ -7,4 +7,5 @@ export type RxProps<T> = {
     rejected?(error: Error, reload?: () => void): ReactNode
     pending?(): ReactNode
     idle?(): ReactNode
+    raiseUnhandledErrors?: boolean
 }

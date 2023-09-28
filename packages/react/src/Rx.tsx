@@ -14,6 +14,9 @@ export function Rx<T>(props: RxProps<T>): React.ReactElement | null {
     }
 
     if (data.status === 'rejected') {
+        if (props.raiseUnhandledErrors && !props.rejected) {
+            throw data.error
+        }
         const rejected = props.rejected?.(data.error, data.reload)
         return rejected ? <>{rejected}</> : <>{data.error.message}</>
     }
