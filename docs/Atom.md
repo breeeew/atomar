@@ -174,3 +174,38 @@ const source$ = Atom.create({
 const size$ = source$.lens('info').lens('size')
 ```
 
+Подробнее про линзы описано в соответствующем разделе
+
+## Atom.combine()
+Работает как `Atom.view`, но позволяет в качестве входных данных использовать несколько атомов чтобы скомбинировать результат. На выходе даёт ReadOnlyAtom.
+```ts
+const source1$ = Atom.create({value: 'foo'})
+const source2$ = Atom.create({a: 'bar'})
+const source3$ = Atom.create({b: 'baz'})
+
+const view$ = Atom.combine(
+	source1$,
+	source2$,
+	source3$,
+	(x1, x2, x3) => `${x1.value} ${x2.a} ${x3.b}`,
+)
+
+view$.get() // -> 'foo bar baz'
+
+source1$.set('qwe')
+
+view$.get() // -> 'qwe bar baz'
+```
+
+## Atom.log
+Добавляет логирование к любому переданному атому:
+```ts
+const source$ = Atom.create(...)
+const log$ = Atom.log(source$)
+
+log$.set(...) // лигирует изменения в консоль
+```
+Можно настроить логирование передав вторым аргументом метод логирования:
+```ts
+const log$ = Atom.log(source$, (prev, next) => ...)
+```

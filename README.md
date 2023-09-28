@@ -1,5 +1,7 @@
 ## Documentation
-TODO. You can read tests and source code for now.
+Docs available here: [docs](https://github.com/breeeew/atomar/tree/master/docs)
+
+Also, I recommend you to read tests and source code for deeper knowledge.
 
 ## Development and publishing
 
