@@ -69,7 +69,7 @@ export function useRx<T>(source: WrappedObservable<T>): Wrapped<T> {
 
     const get = useCallback(() => ref.current.value, []);
     const subscribe = useCallback(
-        (next) => {
+        (next: VoidFunction) => {
             const subscription = wrappedSource.source.subscribe({
                 next: (value) => {
                     if (ref.current.value !== value) {

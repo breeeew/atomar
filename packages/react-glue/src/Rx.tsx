@@ -1,8 +1,8 @@
-import React from "react";
+import type {ReactElement} from "react";
 import {useRx} from "./useRx";
 import type {RxProps} from "./types"
 
-export function Rx<T>(props: RxProps<T>): React.ReactElement | null {
+export function Rx<T>(props: RxProps<T>): ReactElement | null {
     const data = useRx(props.value$)
 
     if (data.status === 'pending') {

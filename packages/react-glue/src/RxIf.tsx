@@ -1,13 +1,15 @@
-import React from "react"
-import { Observable } from "rxjs"
+import type {ReactElement, ReactNode} from "react"
+import type { Observable } from "rxjs"
 import { useRx } from "./useRx"
-type OrReactChild<T> = React.ReactChild | React.ReactChild[] | T
+
+type ReactChild = ReactElement | string | number
+type OrReactChild<T> = ReactChild | ReactChild[] | T
 
 export interface RxIfProps {
-    test$: Observable<any>
-    else?: OrReactChild<() => React.ReactNode>
+    test$: Observable<unknown>
+    else?: OrReactChild<() => ReactNode>
     negate?: boolean
-    children: OrReactChild<() => React.ReactNode>
+    children: OrReactChild<() => ReactNode>
 }
 
 export function RxIf({ test$, children, negate, else: not }: RxIfProps): React.ReactElement | null {
