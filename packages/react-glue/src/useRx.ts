@@ -93,5 +93,5 @@ export function useRx<T>(source: WrappedObservable<T>): Wrapped<T> {
         }
     }, [])
 
-    return useSyncExternalStore(subscribe, get);
+    return useSyncExternalStore(subscribe, get, get);
 }
