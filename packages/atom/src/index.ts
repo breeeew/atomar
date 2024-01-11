@@ -5,7 +5,7 @@ import {
     Atom as _Atom,
     ReadOnlyAtom,
     JsonAtom,
-    CombinedAtomViewImpl, BatchedAtom
+    CombinedAtomViewImpl, BatchedAtom, TransactionalAtom
 } from './base'
 
 export type {ReadOnlyAtom} from './base'
@@ -24,7 +24,7 @@ export namespace Atom {
      * @param initialValue initial value for this atom
      * @returns fresh atom
      */
-    export function create<T>(initialValue: T): Atom<T> {
+    export function create<T>(initialValue: T): TransactionalAtom<T> {
         return new JsonAtom(initialValue)
     }
 

@@ -105,14 +105,36 @@ describe('Atom', () => {
         const callbackMock = jest.fn()
         const sub = new Subscription()
         sub.add(atom$.lens('value').subscribe(callbackMock))
+        callbackMock.mockReset()
         atom$.lens('value').set(345)
         atom$.lens('value').set(346)
         atom$.lens('value').set(347)
-        expect(callbackMock).toBeCalledTimes(1)
-        callbackMock.mockReset()
+
+        // all changes are accessible
+        expect(atom$.get()).toStrictEqual({value: 347})
+
+        // but only last change is notified
+        expect(callbackMock).toBeCalledTimes(0)
         atom$.flush()
         expect(callbackMock).toBeCalledTimes(1)
         expect(callbackMock).toHaveBeenCalledWith(347)
-        expect(atom$.get()).toEqual({value: 347})
+        expect(atom$.get()).toStrictEqual({value: 347})
+    })
+
+    it("should test atom transaction mode", () => {
+        const atom$ = Atom.create({
+            value: 123
+        })
+        const callbackMock = jest.fn()
+        const sub = new Subscription()
+        sub.add(atom$.subscribe(callbackMock))
+        callbackMock.mockReset()
+        atom$.beginTransaction()
+        atom$.set({value: 345})
+        atom$.set({value: 346})
+        atom$.lens('value').set(347)
+        expect(atom$.get()).toStrictEqual({value: 347})
+        atom$.endTransaction()
+        expect(callbackMock).toBeCalledTimes(1)
     })
 })

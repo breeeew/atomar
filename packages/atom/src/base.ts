@@ -215,6 +215,11 @@ export interface Atom<T> extends ReadOnlyAtom<T> {
         >(k1: K1, k2: K2, k3: K3, k4: K4, k5: K5): Atom<T[K1][K2][K3][K4][K5]>
 }
 
+export interface TransactionalAtom<T> extends Atom<T> {
+    beginTransaction(): void
+    endTransaction(): void
+}
+
 export abstract class AbstractReadOnlyAtom<T>
     extends BehaviorSubject<T>
     implements ReadOnlyAtom<T> {
@@ -263,16 +268,19 @@ export abstract class AbstractAtom<T> extends AbstractReadOnlyAtom<T> implements
 
 let clock = 0;
 
-export class JsonAtom<T> extends AbstractAtom<T> {
+export class JsonAtom<T> extends AbstractAtom<T> implements TransactionalAtom<T> {
     private latestValue: {
         value: T,
         time: number;
     };
 
-    private internalSubj: BehaviorSubject<{
+    private readonly internalSubj: BehaviorSubject<{
         value: T,
         time: number;
     }>
+
+    private readonly internalBatched$: BatchedAtom<T>
+    private inTransaction = false
 
     constructor(initialValue: T) {
         super(initialValue)
@@ -281,13 +289,19 @@ export class JsonAtom<T> extends AbstractAtom<T> {
             time: clock++
         }
         this.internalSubj = new BehaviorSubject(this.latestValue)
+        this.internalBatched$ = new BatchedAtom(initialValue)
     }
 
     get() {
+        if (this.inTransaction) return this.internalBatched$.get()
         return this.latestValue.value;
     }
 
     modify(updateFn: (x: T) => T) {
+        if (this.inTransaction) {
+            this.internalBatched$.modify(updateFn)
+            return
+        }
         const prevValue = this.get()
         const next = updateFn(prevValue)
 
@@ -296,10 +310,24 @@ export class JsonAtom<T> extends AbstractAtom<T> {
     }
 
     set(x: T) {
-        const prevValue = this.get()
+        if (this.inTransaction) {
+            this.internalBatched$.set(x)
+            return
+        }
 
+        const prevValue = this.get()
         if (!structEq(prevValue, x))
             this.next(x)
+    }
+
+    beginTransaction() {
+        this.inTransaction = true
+    }
+
+    endTransaction() {
+        this.inTransaction = false
+        this.internalBatched$.flush()
+        this.set(this.internalBatched$.get())
     }
 
     override next(value: T) {
@@ -321,11 +349,11 @@ export class JsonAtom<T> extends AbstractAtom<T> {
     }
 }
 
-export class BatchedAtom<TValue> extends JsonAtom<TValue> {
+export class BatchedAtom<TValue> extends AbstractAtom<TValue> {
     private _batch: TValue | null = null
 
     get() {
-        return this._batch ?? super.get()
+        return this._batch ?? super.getValue()
     }
 
     modify(updateFn: (x: TValue) => TValue) {
