@@ -321,6 +321,38 @@ export class JsonAtom<T> extends AbstractAtom<T> {
     }
 }
 
+export class BatchedAtom<TValue> extends JsonAtom<TValue> {
+    private _batch: TValue | null = null
+
+    get() {
+        return this._batch ?? super.get()
+    }
+
+    modify(updateFn: (x: TValue) => TValue) {
+        const prevValue = this.get()
+        const next = updateFn(prevValue)
+
+        if (!structEq(prevValue, next)) {
+            this._batch = next
+        }
+    }
+
+    set(x: TValue) {
+        const prevValue = this.get()
+
+        if (!structEq(prevValue, x)) {
+            this._batch = x
+        }
+    }
+
+    flush() {
+        if (this._batch !== null) {
+            this.next(this._batch)
+            this._batch = null
+        }
+    }
+}
+
 class LensedAtom<TSource, TDest> extends AbstractAtom<TDest> {
     constructor(
         private _source: Atom<TSource>,
