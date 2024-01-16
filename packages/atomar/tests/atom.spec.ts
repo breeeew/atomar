@@ -85,43 +85,7 @@ describe('Atom', () => {
         subs.unsubscribe();
     });
 
-    it("should test batched atom", () => {
-        const atom$ = Atom.createBatched({value: 123})
-        const callbackMock = jest.fn()
-        const sub = new Subscription()
-        sub.add(atom$.subscribe(callbackMock))
-        atom$.set({value: 345})
-        atom$.set({value: 346})
-        atom$.set({value: 347})
-        expect(callbackMock).toBeCalledTimes(1)
-        callbackMock.mockReset()
-        atom$.flush()
-        expect(callbackMock).toBeCalledTimes(1)
-        expect(callbackMock).toHaveBeenCalledWith({value: 347})
-    })
-
-    it("should test batched atom with lens", () => {
-        const atom$ = Atom.createBatched({value: 123})
-        const callbackMock = jest.fn()
-        const sub = new Subscription()
-        sub.add(atom$.lens('value').subscribe(callbackMock))
-        callbackMock.mockReset()
-        atom$.lens('value').set(345)
-        atom$.lens('value').set(346)
-        atom$.lens('value').set(347)
-
-        // all changes are accessible
-        expect(atom$.get()).toStrictEqual({value: 347})
-
-        // but only last change is notified
-        expect(callbackMock).toBeCalledTimes(0)
-        atom$.flush()
-        expect(callbackMock).toBeCalledTimes(1)
-        expect(callbackMock).toHaveBeenCalledWith(347)
-        expect(atom$.get()).toStrictEqual({value: 347})
-    })
-
-    it("should test atom transaction mode", () => {
+    it("should test atom batch mode", () => {
         const atom$ = Atom.create({
             value: 123
         })
@@ -129,12 +93,39 @@ describe('Atom', () => {
         const sub = new Subscription()
         sub.add(atom$.subscribe(callbackMock))
         callbackMock.mockReset()
-        atom$.beginTransaction()
-        atom$.set({value: 345})
-        atom$.set({value: 346})
-        atom$.lens('value').set(347)
-        expect(atom$.get()).toStrictEqual({value: 347})
-        atom$.endTransaction()
+        atom$.batch(() => {
+            atom$.set({value: 345})
+            expect(atom$.get()).toStrictEqual({value: 345})
+            atom$.set({value: 346})
+            expect(atom$.get()).toStrictEqual({value: 346})
+            atom$.lens('value').set(347)
+            expect(atom$.get()).toStrictEqual({value: 347})
+            expect(atom$.lens('value').get()).toBe(347)
+        })
         expect(callbackMock).toBeCalledTimes(1)
+        expect(atom$.get()).toStrictEqual({value: 347})
+    })
+
+    it("should test atom batch mode with async fn", async () => {
+        const atom$ = Atom.create({
+            value: 123
+        })
+        const callbackMock = jest.fn()
+        const sub = new Subscription()
+        sub.add(atom$.subscribe(callbackMock))
+        callbackMock.mockReset()
+        const result = await atom$.batch(async () => {
+            atom$.set({value: 345})
+            expect(atom$.get()).toStrictEqual({value: 345})
+            atom$.set({value: 346})
+            expect(atom$.get()).toStrictEqual({value: 346})
+            atom$.lens('value').set(347)
+            expect(atom$.get()).toStrictEqual({value: 347})
+            expect(atom$.lens('value').get()).toBe(347)
+            return atom$.get()
+        })
+        expect(callbackMock).toBeCalledTimes(1)
+        expect(atom$.get()).toStrictEqual({value: 347})
+        expect(result).toStrictEqual({value: 347})
     })
 })

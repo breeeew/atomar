@@ -2,6 +2,7 @@ import { Lens, Prism } from '@atomrx/lens'
 import { structEq, Option } from '@atomrx/utils'
 
 import { Observable, Subscriber, Subscription, BehaviorSubject, combineLatest } from 'rxjs'
+import {isPromise} from "rxjs/internal/util/isPromise";
 
 type InferAtomType<T> = Exclude<T, undefined>
 
@@ -156,6 +157,13 @@ export interface Atom<T> extends ReadOnlyAtom<T> {
     modify(updateFn: (currentValue: T) => T): void
 
     /**
+     * Perform a batch update of the atom.
+     * The update function will be called only once, and the atom will be updated
+     * @param fn batch update function
+     */
+    batch(fn: () => void): void | Promise<void>
+
+    /**
      * Set new atom value.
      *
      * @param newValue new value
@@ -215,11 +223,6 @@ export interface Atom<T> extends ReadOnlyAtom<T> {
         >(k1: K1, k2: K2, k3: K3, k4: K4, k5: K5): Atom<T[K1][K2][K3][K4][K5]>
 }
 
-export interface TransactionalAtom<T> extends Atom<T> {
-    beginTransaction(): void
-    endTransaction(): void
-}
-
 export abstract class AbstractReadOnlyAtom<T>
     extends BehaviorSubject<T>
     implements ReadOnlyAtom<T> {
@@ -251,6 +254,7 @@ export abstract class AbstractReadOnlyAtom<T>
 
 export abstract class AbstractAtom<T> extends AbstractReadOnlyAtom<T> implements Atom<T> {
     abstract modify(updateFn: (x: T) => T): void
+    abstract batch(fn: () => void | Promise<void>): void | Promise<void>
 
     set(x: T) {
         this.modify(() => x)
@@ -268,19 +272,19 @@ export abstract class AbstractAtom<T> extends AbstractReadOnlyAtom<T> implements
 
 let clock = 0;
 
-export class JsonAtom<T> extends AbstractAtom<T> implements TransactionalAtom<T> {
+export class JsonAtom<T> extends AbstractAtom<T> {
     private latestValue: {
         value: T,
         time: number;
     };
+    private lastBatchedValue: T
 
     private readonly internalSubj: BehaviorSubject<{
         value: T,
         time: number;
     }>
 
-    private readonly internalBatched$: BatchedAtom<T>
-    private inTransaction = false
+    private inBatchMode = false
 
     constructor(initialValue: T) {
         super(initialValue)
@@ -288,46 +292,44 @@ export class JsonAtom<T> extends AbstractAtom<T> implements TransactionalAtom<T>
             value: initialValue,
             time: clock++
         }
+        this.lastBatchedValue = initialValue
         this.internalSubj = new BehaviorSubject(this.latestValue)
-        this.internalBatched$ = new BatchedAtom(initialValue)
     }
 
     get() {
-        if (this.inTransaction) return this.internalBatched$.get()
+        if (this.inBatchMode) return this.lastBatchedValue
         return this.latestValue.value;
     }
 
     modify(updateFn: (x: T) => T) {
-        if (this.inTransaction) {
-            this.internalBatched$.modify(updateFn)
-            return
-        }
         const prevValue = this.get()
         const next = updateFn(prevValue)
 
-        if (!structEq(prevValue, next))
-            this.next(next)
+        if (!structEq(prevValue, next)) {
+           if (this.inBatchMode) this.lastBatchedValue = next
+           else this.next(next)
+        }
     }
 
     set(x: T) {
-        if (this.inTransaction) {
-            this.internalBatched$.set(x)
-            return
-        }
-
         const prevValue = this.get()
-        if (!structEq(prevValue, x))
-            this.next(x)
+        if (!structEq(prevValue, x)) {
+            if (this.inBatchMode) this.lastBatchedValue = x
+            else this.next(x)
+        }
     }
 
-    beginTransaction() {
-        this.inTransaction = true
-    }
-
-    endTransaction() {
-        this.inTransaction = false
-        this.internalBatched$.flush()
-        this.set(this.internalBatched$.get())
+    batch<TResult>(fn: () => Promise<TResult>): Promise<TResult>
+    batch<TResult>(fn: () => TResult): TResult
+    batch<TResult>(fn: () => TResult | Promise<TResult>): TResult | Promise<TResult> {
+        this.inBatchMode = true
+        const result = fn()
+        const done = (value: TResult) => {
+            this.inBatchMode = false
+            this.set(this.lastBatchedValue)
+            return value
+        }
+        return isPromise(result) ? result.then(done) : done(result)
     }
 
     override next(value: T) {
@@ -349,38 +351,6 @@ export class JsonAtom<T> extends AbstractAtom<T> implements TransactionalAtom<T>
     }
 }
 
-export class BatchedAtom<TValue> extends AbstractAtom<TValue> {
-    private _batch: TValue | null = null
-
-    get() {
-        return this._batch ?? super.getValue()
-    }
-
-    modify(updateFn: (x: TValue) => TValue) {
-        const prevValue = this.get()
-        const next = updateFn(prevValue)
-
-        if (!structEq(prevValue, next)) {
-            this._batch = next
-        }
-    }
-
-    set(x: TValue) {
-        const prevValue = this.get()
-
-        if (!structEq(prevValue, x)) {
-            this._batch = x
-        }
-    }
-
-    flush() {
-        if (this._batch !== null) {
-            this.next(this._batch)
-            this._batch = null
-        }
-    }
-}
-
 class LensedAtom<TSource, TDest> extends AbstractAtom<TDest> {
     constructor(
         private _source: Atom<TSource>,
@@ -396,6 +366,10 @@ class LensedAtom<TSource, TDest> extends AbstractAtom<TDest> {
         // descendant of BehaviorSubject as well), which will emit a
         // value right away, triggering our _onSourceValue.
         super(undefined!)
+    }
+
+    batch(fn: () => void): void {
+        this._source.batch(fn)
     }
 
     get() {
