@@ -161,7 +161,8 @@ export interface Atom<T> extends ReadOnlyAtom<T> {
      * The update function will be called only once, and the atom will be updated
      * @param fn batch update function
      */
-    batch(fn: () => void): void | Promise<void>
+    batch<TResult>(fn: () => Promise<TResult>): Promise<TResult>
+    batch<TResult>(fn: () => TResult): TResult
 
     /**
      * Set new atom value.
@@ -254,7 +255,9 @@ export abstract class AbstractReadOnlyAtom<T>
 
 export abstract class AbstractAtom<T> extends AbstractReadOnlyAtom<T> implements Atom<T> {
     abstract modify(updateFn: (x: T) => T): void
-    abstract batch(fn: () => void | Promise<void>): void | Promise<void>
+
+    abstract batch<TResult>(fn: () => Promise<TResult>): Promise<TResult>
+    abstract batch<TResult>(fn: () => TResult): TResult
 
     set(x: T) {
         this.modify(() => x)
@@ -368,8 +371,10 @@ class LensedAtom<TSource, TDest> extends AbstractAtom<TDest> {
         super(undefined!)
     }
 
-    batch(fn: () => void): void {
-        this._source.batch(fn)
+    batch<TResult>(fn: () => Promise<TResult>): Promise<TResult>
+    batch<TResult>(fn: () => TResult): TResult
+    batch<TResult>(fn: () => TResult | Promise<TResult>): TResult | Promise<TResult> {
+        return this._source.batch(fn)
     }
 
     get() {
