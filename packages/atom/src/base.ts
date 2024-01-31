@@ -325,6 +325,7 @@ export class JsonAtom<T> extends AbstractAtom<T> {
     batch<TResult>(fn: () => Promise<TResult>): Promise<TResult>
     batch<TResult>(fn: () => TResult): TResult
     batch<TResult>(fn: () => TResult | Promise<TResult>): TResult | Promise<TResult> {
+        this.lastBatchedValue = this.get()
         this.inBatchMode = true
         const result = fn()
         const done = (value: TResult) => {
