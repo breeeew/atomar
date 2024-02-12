@@ -136,6 +136,9 @@ export interface ReadOnlyAtom<T> extends Observable<T> {
         K4 extends keyof T[K1][K2][K3],
         K5 extends keyof T[K1][K2][K3][K4]
         >(k1: K1, k2: K2, k3: K3, k4: K4, k5: K5): ReadOnlyAtom<T[K1][K2][K3][K4][K5]>
+
+    // @internal
+    readonly isBatching: boolean
 }
 
 /**
@@ -251,6 +254,8 @@ export abstract class AbstractReadOnlyAtom<T>
             : this as ReadOnlyAtom<T>
         /* eslint-enable @typescript-eslint/no-use-before-define */
     }
+
+    abstract isBatching: boolean
 }
 
 export abstract class AbstractAtom<T> extends AbstractReadOnlyAtom<T> implements Atom<T> {
@@ -258,6 +263,12 @@ export abstract class AbstractAtom<T> extends AbstractReadOnlyAtom<T> implements
 
     abstract batch<TResult>(fn: () => Promise<TResult>): Promise<TResult>
     abstract batch<TResult>(fn: () => TResult): TResult
+
+    protected _isBatching = false
+
+    get isBatching() {
+        return this._isBatching
+    }
 
     set(x: T) {
         this.modify(() => x)
@@ -280,14 +291,13 @@ export class JsonAtom<T> extends AbstractAtom<T> {
         value: T,
         time: number;
     };
-    private lastBatchedValue: T
 
     private readonly internalSubj: BehaviorSubject<{
         value: T,
         time: number;
     }>
 
-    private inBatchMode = false
+    private lastBatchedValue: T
 
     constructor(initialValue: T) {
         super(initialValue)
@@ -300,7 +310,7 @@ export class JsonAtom<T> extends AbstractAtom<T> {
     }
 
     get() {
-        if (this.inBatchMode) return this.lastBatchedValue
+        if (this.isBatching) return this.lastBatchedValue
         return this.latestValue.value;
     }
 
@@ -309,7 +319,7 @@ export class JsonAtom<T> extends AbstractAtom<T> {
         const next = updateFn(prevValue)
 
         if (!structEq(prevValue, next)) {
-           if (this.inBatchMode) this.lastBatchedValue = next
+           if (this.isBatching) this.lastBatchedValue = next
            else this.next(next)
         }
     }
@@ -317,7 +327,7 @@ export class JsonAtom<T> extends AbstractAtom<T> {
     set(x: T) {
         const prevValue = this.get()
         if (!structEq(prevValue, x)) {
-            if (this.inBatchMode) this.lastBatchedValue = x
+            if (this.isBatching) this.lastBatchedValue = x
             else this.next(x)
         }
     }
@@ -326,10 +336,10 @@ export class JsonAtom<T> extends AbstractAtom<T> {
     batch<TResult>(fn: () => TResult): TResult
     batch<TResult>(fn: () => TResult | Promise<TResult>): TResult | Promise<TResult> {
         this.lastBatchedValue = this.get()
-        this.inBatchMode = true
+        this._isBatching = true
         const result = fn()
         const done = (value: TResult) => {
-            this.inBatchMode = false
+            this._isBatching = false
             this.set(this.lastBatchedValue)
             return value
         }
@@ -369,7 +379,12 @@ class LensedAtom<TSource, TDest> extends AbstractAtom<TDest> {
         // atom, it will subscribe to the _source (which we expect to be a
         // descendant of BehaviorSubject as well), which will emit a
         // value right away, triggering our _onSourceValue.
-        super(undefined!)
+        const initialValue = _source.isBatching ? _lens.get(_source.get()) : undefined
+        super(initialValue!)
+    }
+
+    override get isBatching() {
+        return this._source.isBatching
     }
 
     batch<TResult>(fn: () => Promise<TResult>): Promise<TResult>
@@ -385,6 +400,9 @@ class LensedAtom<TSource, TDest> extends AbstractAtom<TDest> {
         //
         // This way we don't need to recalculate the lens value
         // every time.
+        if (this.isBatching) {
+            return this._lens.get(this._source.get())
+        }
         return this._subscription
             ? this.getValue()
             : this._lens.get(this._source.get())
@@ -453,7 +471,12 @@ class AtomViewImpl<TSource, TDest> extends AbstractReadOnlyAtom<TDest> {
         // atom, it will subscribe to the _source (which we expect to be a
         // descendant of BehaviorSubject as well), which will emit a
         // value right away, triggering our _onSourceValue.
-        super(undefined!)
+        const initialValue = _source.isBatching ? _getter(_source.get()) : undefined
+        super(initialValue!)
+    }
+
+    get isBatching() {
+        return this._source.isBatching
     }
 
     get() {
@@ -524,7 +547,12 @@ export class CombinedAtomViewImpl<TResult> extends AbstractReadOnlyAtom<TResult>
         // atom, it will subscribe to the _source (which we expect to be a
         // descendant of BehaviorSubject as well), which will emit a
         // value right away, triggering our _onSourceValue.
-        super(undefined!)
+        const initialValue = _sources.some(x => x.isBatching) ? _combineFn(_sources.map(x => x.get())) : undefined
+        super(initialValue!)
+    }
+
+    get isBatching() {
+        return this._sources.some(x => x.isBatching)
     }
 
     get() {
