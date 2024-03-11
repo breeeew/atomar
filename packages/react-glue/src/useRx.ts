@@ -1,79 +1,45 @@
-import {useRef, useCallback, useMemo, MutableRefObject} from "react"
+import {useCallback, useEffect, useMemo} from "react"
 import {pendingWrapped, wrap} from "@atomrx/wrapped";
 import {Wrapped, WrappedObservable} from "@atomrx/wrapped";
 import {useSyncExternalStore} from 'use-sync-external-store/shim'
-import {Observable, shareReplay, skip, take} from "rxjs";
+import {Observable, shareReplay, Subscription} from "rxjs";
 
 function toObsWithSyncGetter<T>(observable: Observable<T>) {
+    let value: T | undefined
+    let next: ((value: T) => void) | undefined
+    const subscription = observable.pipe(shareReplay({
+        refCount: true,
+        bufferSize: 1,
+    })).subscribe(x => {
+        value = x
+        next?.(x)
+    })
+
     return {
         source: observable,
-        getValue: () => {
-            let value: T | undefined
-            const sub = observable.pipe(take(1)).subscribe(x => {
-                value = x
-            })
-            sub.unsubscribe()
-            return value
+        getValue: (fallback: T) => value ?? fallback,
+        unsubscribe: () => {
+            subscription.unsubscribe()
+            next = undefined
+        },
+        attach: (nextFn: (value: T) => void) => {
+            next = nextFn
         }
     };
 }
 
-function useRefFn<T>(fn: () => T) {
-    const ref = useRef<T>()
-    if (!ref.current) {
-        ref.current = fn()
-    }
-    return ref as MutableRefObject<T>
-}
-
-type RefValue<T> = {
-    source: Observable<Wrapped<T>>
-    value: Wrapped<T>
-}
-
 export function useRx<T>(source: WrappedObservable<T>): Wrapped<T> {
-    const wrapped = useMemo(() => toObsWithSyncGetter(wrap(source).pipe(
-        shareReplay({
-            refCount: true,
-            bufferSize: 1
-        })),
-    ), [source])
-
-    const ref = useRefFn<RefValue<T>>(() => ({
-        source: wrapped.source,
-        value: wrapped.getValue() ?? pendingWrapped
-    }))
-
-    if (ref.current.source !== wrapped.source) {
-        ref.current = {
-            value: wrapped.getValue() ?? pendingWrapped,
-            source: wrapped.source
-        }
-    }
-
-    const get = useCallback(() => ref.current.value, []);
+    const wrapped = useMemo(() =>
+        toObsWithSyncGetter(wrap(source)),
+        [source],
+    );
+    const get = useCallback(() => wrapped.getValue(pendingWrapped), [wrapped]);
 
     const subscribe = useCallback(
         (next: VoidFunction) => {
-            const subscription = wrapped.source.subscribe({
-                next: (value) => {
-                    if (value.status === 'fulfilled' && ref.current.value.status === 'fulfilled') {
-                        if (ref.current.value.value !== value.value) {
-                            ref.current.value = value;
-                            next();
-                        }
-                    } else {
-                        if (ref.current.value !== value) {
-                            ref.current.value = value;
-                            next();
-                        }
-                    }
-                }
-            });
-
-            return () => subscription.unsubscribe();
+            wrapped.attach(next);
+            return () => wrapped.unsubscribe();
         },
-
         [wrapped]
     );
 

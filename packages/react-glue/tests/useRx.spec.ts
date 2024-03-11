@@ -26,9 +26,7 @@ describe('useRx hook', () => {
             initialProps: obs$
         })
 
-        console.log(view.result.all)
         expect(view.result.all.length).toBe(1);
-
 
         obs$.next(1);
         obs$.next(2);
@@ -136,18 +134,18 @@ describe('useRx hook', () => {
             initialProps: obs1$
         })
 
-        expect(sub1).toHaveBeenCalledTimes(2);
+        expect(sub1).toHaveBeenCalledTimes(1);
 
         view.rerender(obs2$);
-        expect(unsub1).toHaveBeenCalledTimes(2);
-        expect(sub2).toHaveBeenCalledTimes(2);
+        expect(unsub1).toHaveBeenCalledTimes(1);
+        expect(sub2).toHaveBeenCalledTimes(1);
 
         view.rerender(obs3$);
-        expect(sub3).toHaveBeenCalledTimes(2);
-        expect(unsub2).toHaveBeenCalledTimes(2);
+        expect(sub3).toHaveBeenCalledTimes(1);
+        expect(unsub2).toHaveBeenCalledTimes(1);
 
         view.unmount();
 
-        expect(unsub3).toHaveBeenCalledTimes(2);
+        expect(unsub3).toHaveBeenCalledTimes(1);
     })
 })
