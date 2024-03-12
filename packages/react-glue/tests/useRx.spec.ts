@@ -1,7 +1,7 @@
 import {useRx} from '../src/useRx'
-import {renderHook} from '@testing-library/react-hooks';
+import {act, renderHook, RenderHookResult} from '@testing-library/react-hooks';
 import {BehaviorSubject, Subject, tap} from "rxjs";
-import {createFulfilledWrapped, pendingWrapped} from "@atomrx/wrapped";
+import {createFulfilledWrapped, pendingWrapped, Wrapped} from "@atomrx/wrapped";
 
 describe('useRx hook', () => {
     it('should start with pending value for EMPTY observable', () => {
@@ -56,12 +56,11 @@ describe('useRx hook', () => {
 
         const obs1$ = new BehaviorSubject(1);
         const obs2$ = new BehaviorSubject(2);
-
         const view = renderHook((props) => useRx(props), {
-            initialProps: obs1$
+            initialProps: obs1$,
         })
 
-        view.rerender(obs2$);
+        act(() => view.rerender(obs2$))
 
         expect(view.result.all.length).toBe(2);
 
@@ -80,7 +79,6 @@ describe('useRx hook', () => {
         })
 
         view.rerender(obs2$);
-
 
         expect(view.result.all.length).toBe(2);
 
