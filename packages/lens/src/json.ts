@@ -176,7 +176,7 @@ const indexCache = new SimpleCache<number, Lens<any[], any>>(i => {
             }
         )
         return Lens.choose((v) => {
-            if (v[i] == null) return Lens.nothing()
+            if (!v || v[i] == null) return Lens.nothing()
             return prism
         })
 })
