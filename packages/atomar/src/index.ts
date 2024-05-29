@@ -1,3 +1,4 @@
+// this package just re-export's all packages
 export * from '@atomrx/atom'
 export * from '@atomrx/lens'
 export * from '@atomrx/wrapped'
