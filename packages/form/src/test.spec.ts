@@ -137,4 +137,68 @@ describe("FormStore", () => {
         expect(results[0]?.status).toBe("validating")
         expect(results[1]?.status).toBe("error")
     })
+
+    describe('form with array', () => {
+        type ContractsForm = {
+            contracts: Array<{
+                serial: string;
+                acts: Array<{amount: number;}>
+            }>
+        }
+
+
+        function createContractsAtom() {
+            return Atom.create<ContractsForm>({
+                contracts: [
+                    {
+                        serial: 'contract-serial',
+
+                        acts: [
+                            {amount: 0},
+                        ]
+                    }
+                ]
+            })
+        }
+
+        const contractsFormValidation = validateJoi<ContractsForm>(Joi.object<ContractsForm>().keys({
+            contracts: Joi.array().items(Joi.object().keys({
+                serial: Joi.string().required(),
+
+                acts: Joi.array().items(Joi.object().keys({
+                    amount: Joi.number().min(1),
+                }))
+            }))
+        }));
+
+        test('create FormStore with array and perform validation', async () => {
+            const atom = createContractsAtom();
+            const form = FormStore.create(atom, contractsFormValidation);
+
+            const amount = form
+                .bind('contracts')
+                .bind(0)
+                .bind('acts')
+                .bind(0)
+                .bind('amount');
+
+            const withError = await lastValueFrom(amount.validationResult
+                .pipe(
+                    filter((x): x is ValidationResultError<number> => x.status === "error"),
+                    first()
+                ));
+
+            expect(withError.error).toBe('"contracts[0].acts[0].amount" must be greater than or equal to 1');
+
+            amount.value.modify(() => 10);
+
+            const success = await lastValueFrom(amount.validationResult
+                .pipe(
+                    filter(x => x.status === "success"),
+                    first()
+                ));
+
+            expect(success.status).toBe("success")
+        });
+    })
 })
