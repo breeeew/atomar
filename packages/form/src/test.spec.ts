@@ -196,7 +196,7 @@ describe("FormStore", () => {
 
             expect(withError.error).toBe('"contracts[0].acts[0].amount" must be greater than or equal to 1');
 
-            amount.value.modify(() => 10);
+            amount.value.set(10);
 
             const success = await lastValueFrom(amount.validationResult
                 .pipe(
