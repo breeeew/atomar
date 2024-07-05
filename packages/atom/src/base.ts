@@ -289,7 +289,7 @@ export abstract class AbstractAtom<T> extends AbstractReadOnlyAtom<T> implements
                 return new LensedAtom(this, Lens.compose(Lens.key(arg1), ...args.map(k => Lens.key(k))), structEq)
 
             case 'number':
-                return new LensedAtom(this, Lens.compose(Lens.index(arg1), ...args.map(k => Lens.key(k))), structEq)
+                return new LensedAtom(this, Lens.index(arg1) as Lens<T, U>, structEq)
 
             default:
                 return new LensedAtom<T, U>(this, arg1 as Lens<T, U>, structEq)
