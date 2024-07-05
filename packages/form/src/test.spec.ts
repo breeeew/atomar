@@ -1,5 +1,6 @@
 import Joi from "joi"
-import {lastValueFrom, Observable, timer, filter, first, map, reduce, takeWhile, tap} from "rxjs"
+import {lastValueFrom, Observable, timer, filter, first, map, reduce, takeWhile} from "rxjs"
+import {expectType} from 'ts-expect'
 import type { ValidationResult, ValidationResultError, ValidationStatus } from "./types"
 import {Atom} from "@atomrx/atom";
 import {validateJoi} from "./validation"
@@ -139,13 +140,14 @@ describe("FormStore", () => {
     })
 
     describe('form with array', () => {
-        type ContractsForm = {
-            contracts: Array<{
-                serial: string;
-                acts: Array<{amount: number;}>
-            }>
+        type Contract = {
+            serial: string;
+            acts: Array<{amount: number;}>
         }
 
+        type ContractsForm = {
+            contracts: Array<Contract>
+        }
 
         function createContractsAtom() {
             return Atom.create<ContractsForm>({
@@ -175,12 +177,16 @@ describe("FormStore", () => {
             const atom = createContractsAtom();
             const form = FormStore.create(atom, contractsFormValidation);
 
-            const amount = form
-                .bind('contracts')
-                .bind(0)
+            const contract = form.bind('contracts').bind(0);
+
+            expectType<Contract | undefined>(contract.value.get());
+
+            const amount = contract
                 .bind('acts')
                 .bind(0)
                 .bind('amount');
+
+            expectType<number |undefined>(amount.value.get())
 
             const withError = await lastValueFrom(amount.validationResult
                 .pipe(
@@ -210,7 +216,6 @@ describe("FormStore", () => {
 
             const amount = contract.bind('acts').bind(999).bind('amount');
             expect(amount.value.get()).toBeUndefined();
-
         });
     })
 })
