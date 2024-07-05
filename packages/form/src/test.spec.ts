@@ -1,5 +1,5 @@
 import Joi from "joi"
-import {lastValueFrom, Observable, timer, filter, first, map, reduce, takeWhile} from "rxjs"
+import {lastValueFrom, Observable, timer, filter, first, map, reduce, takeWhile, tap} from "rxjs"
 import type { ValidationResult, ValidationResultError, ValidationStatus } from "./types"
 import {Atom} from "@atomrx/atom";
 import {validateJoi} from "./validation"
@@ -199,6 +199,18 @@ describe("FormStore", () => {
                 ));
 
             expect(success.status).toBe("success")
+        });
+
+        test('bind by non-existent index', async () => {
+            const atom = createContractsAtom();
+            const form = FormStore.create(atom, contractsFormValidation);
+
+            const contract = form.bind('contracts').bind(999);
+            expect(contract.value.get()).toBeUndefined();
+
+            const amount = contract.bind('acts').bind(999).bind('amount');
+            expect(amount.value.get()).toBeUndefined();
+
         });
     })
 })
