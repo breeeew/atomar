@@ -189,11 +189,6 @@ export interface Atom<T> extends ReadOnlyAtom<T> {
     lens<K extends keyof InferAtomType<T>>(k: K): Atom<T extends undefined ? undefined : InferAtomType<T>[K]>
 
     /**
-     * Create a lensed atom that's focused on a array item of given index.
-     */
-    lens(index: number): T extends Array<any> ? Atom<T[number]> : never
-
-    /**
      * Create a lensed atom that's focused on a given property path.
      */
     lens<
@@ -281,19 +276,11 @@ export abstract class AbstractAtom<T> extends AbstractReadOnlyAtom<T> implements
 
     lens<U>(lens: Lens<T, U>): Atom<U>
     lens<K extends keyof T>(k: K): Atom<T[K]>
-    lens(k: number): T extends Array<any> ? Atom<T[number]> : never
 
-    lens<U>(arg1: Lens<T, U> | string | number, ...args: string[]): Atom<any> {
-        switch (typeof arg1) {
-            case 'string':
-                return new LensedAtom(this, Lens.compose(Lens.key(arg1), ...args.map(k => Lens.key(k))), structEq)
-
-            case 'number':
-                return new LensedAtom(this, Lens.index(arg1) as Lens<T, U>, structEq)
-
-            default:
-                return new LensedAtom<T, U>(this, arg1 as Lens<T, U>, structEq)
-        }
+    lens<U>(arg1: Lens<T, U> | string, ...args: string[]): Atom<any> {
+        return typeof arg1 === 'string'
+            ? new LensedAtom(this, Lens.compose(Lens.key(arg1), ...args.map(k => Lens.key(k))), structEq)
+            : new LensedAtom<T, U>(this, arg1 as Lens<T, U>, structEq)
     }
 }
 
