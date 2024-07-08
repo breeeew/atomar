@@ -6,7 +6,6 @@ import {createValidationResult} from "./utils"
 import {assertAndReturn} from "@atomrx/utils";
 
 type ElementOfArray<T> = T extends readonly (infer Values)[] ? Values | undefined : never;
-type Exact<T> = Exclude<T, undefined>
 
 export class FormStore<T, WithUndefined = false> {
     readonly canSubmit$ = this.validationResult.pipe(map(it => it.status === "success"))
@@ -18,11 +17,11 @@ export class FormStore<T, WithUndefined = false> {
     ) {}
 
     bind(index: number): FormStore<ElementOfArray<T>, true>
-    bind<K extends keyof Exact<T>>(field: K): FormStore<Exact<T>[K], WithUndefined>
+    bind<K extends keyof NonNullable<T>>(field: K): FormStore<NonNullable<T>[K], T extends undefined | null ? true : WithUndefined>
 
     bind<K extends keyof T>(
         field: K | number,
-    ): FormStore<Exact<T>[K], WithUndefined> | FormStore<ElementOfArray<T>, true>{
+    ): FormStore<NonNullable<T>[K], T extends undefined | null ? true : WithUndefined> | FormStore<ElementOfArray<T>, true>{
         const cached = this.bindCache.get(field)
         if (cached) return cached
         // @ts-ignore

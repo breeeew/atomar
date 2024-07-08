@@ -1,6 +1,6 @@
 import Joi from "joi"
 import {lastValueFrom, Observable, timer, filter, first, map, reduce, takeWhile} from "rxjs"
-import {expectType} from 'ts-expect'
+import {expectType, TypeEqual} from 'ts-expect'
 import type { ValidationResult, ValidationResultError, ValidationStatus } from "./types"
 import {Atom} from "@atomrx/atom";
 import {validateJoi} from "./validation"
@@ -139,6 +139,20 @@ describe("FormStore", () => {
         expect(results[1]?.status).toBe("error")
     })
 
+    it("check right types after bind with possible nullable parent", () => {
+        type User = {name: string};
+        type Form = {userWithUndefined?: User, userWithNull: User | null};
+
+        const atom = Atom.create<Form>({userWithUndefined: undefined, userWithNull: null});
+        const form = FormStore.create(atom, validateJoi(Joi.object()));
+
+        const nameValueOfUndefinedUser = form.bind('userWithUndefined').bind('name').value.get();
+        const nameValueOfNullUser = form.bind('userWithNull').bind('name').value.get();
+
+        expectType<TypeEqual<typeof nameValueOfUndefinedUser, string | undefined>>(true)
+        expectType<TypeEqual<typeof nameValueOfNullUser, string | undefined>>(true)
+    });
+
     describe('form with array', () => {
         type Contract = {
             serial: string;
@@ -179,14 +193,16 @@ describe("FormStore", () => {
 
             const contract = form.bind('contracts').bind(0);
 
-            expectType<Contract | undefined>(contract.value.get());
+            const contractValue = contract.value.get();
+            expectType<TypeEqual<Contract | undefined, typeof contractValue>>(true);
 
             const amount = contract
                 .bind('acts')
                 .bind(0)
                 .bind('amount');
 
-            expectType<number |undefined>(amount.value.get())
+            const amountValue = amount.value.get();
+            expectType<TypeEqual<number | undefined, typeof amountValue>>(true);
 
             const withError = await lastValueFrom(amount.validationResult
                 .pipe(
