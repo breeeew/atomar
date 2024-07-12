@@ -1,5 +1,6 @@
 import Joi from "joi"
 import {lastValueFrom, Observable, timer, filter, first, map, reduce, takeWhile} from "rxjs"
+import {expectType, TypeEqual} from 'ts-expect'
 import type { ValidationResult, ValidationResultError, ValidationStatus } from "./types"
 import {Atom} from "@atomrx/atom";
 import {validateJoi} from "./validation"
@@ -136,5 +137,101 @@ describe("FormStore", () => {
         expect(results.length).toBe(2)
         expect(results[0]?.status).toBe("validating")
         expect(results[1]?.status).toBe("error")
+    })
+
+    it("check right types after bind with possible nullable parent", () => {
+        type User = {name: string};
+        type Form = {userWithUndefined?: User, userWithNull: User | null};
+
+        const atom = Atom.create<Form>({userWithUndefined: undefined, userWithNull: null});
+        const form = FormStore.create(atom, validateJoi(Joi.object()));
+
+        const nameValueOfUndefinedUser = form.bind('userWithUndefined').bind('name').value.get();
+        const nameValueOfNullUser = form.bind('userWithNull').bind('name').value.get();
+
+        expectType<TypeEqual<typeof nameValueOfUndefinedUser, string | undefined>>(true)
+        expectType<TypeEqual<typeof nameValueOfNullUser, string | undefined>>(true)
+    });
+
+    describe('form with array', () => {
+        type Contract = {
+            serial: string;
+            acts: Array<{amount: number;}>
+        }
+
+        type ContractsForm = {
+            contracts: Array<Contract>
+        }
+
+        function createContractsAtom() {
+            return Atom.create<ContractsForm>({
+                contracts: [
+                    {
+                        serial: 'contract-serial',
+
+                        acts: [
+                            {amount: 0},
+                        ]
+                    }
+                ]
+            })
+        }
+
+        const contractsFormValidation = validateJoi<ContractsForm>(Joi.object<ContractsForm>().keys({
+            contracts: Joi.array().items(Joi.object().keys({
+                serial: Joi.string().required(),
+
+                acts: Joi.array().items(Joi.object().keys({
+                    amount: Joi.number().min(1),
+                }))
+            }))
+        }));
+
+        test('create FormStore with array and perform validation', async () => {
+            const atom = createContractsAtom();
+            const form = FormStore.create(atom, contractsFormValidation);
+
+            const contract = form.bind('contracts').bind(0);
+
+            const contractValue = contract.value.get();
+            expectType<TypeEqual<Contract | undefined, typeof contractValue>>(true);
+
+            const amount = contract
+                .bind('acts')
+                .bind(0)
+                .bind('amount');
+
+            const amountValue = amount.value.get();
+            expectType<TypeEqual<number | undefined, typeof amountValue>>(true);
+
+            const withError = await lastValueFrom(amount.validationResult
+                .pipe(
+                    filter((x): x is ValidationResultError<number> => x.status === "error"),
+                    first()
+                ));
+
+            expect(withError.error).toBe('"contracts[0].acts[0].amount" must be greater than or equal to 1');
+
+            amount.value.set(10);
+
+            const success = await lastValueFrom(amount.validationResult
+                .pipe(
+                    filter(x => x.status === "success"),
+                    first()
+                ));
+
+            expect(success.status).toBe("success")
+        });
+
+        test('bind by non-existent index', async () => {
+            const atom = createContractsAtom();
+            const form = FormStore.create(atom, contractsFormValidation);
+
+            const contract = form.bind('contracts').bind(999);
+            expect(contract.value.get()).toBeUndefined();
+
+            const amount = contract.bind('acts').bind(999).bind('amount');
+            expect(amount.value.get()).toBeUndefined();
+        });
     })
 })

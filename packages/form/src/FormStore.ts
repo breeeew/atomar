@@ -1,23 +1,31 @@
 import {Atom} from "@atomrx/atom"
+import {Lens} from "@atomrx/lens";
 import {map, Observable} from "rxjs"
 import type {ValidationResult, Validate} from "./types"
 import {createValidationResult} from "./utils"
 import {assertAndReturn} from "@atomrx/utils";
 
-export class FormStore<T> {
+type ElementOfArray<T> = T extends readonly (infer Values)[] ? Values | undefined : never;
+
+export class FormStore<T, WithUndefined = false> {
     readonly canSubmit$ = this.validationResult.pipe(map(it => it.status === "success"))
-    private readonly bindCache: Map<keyof T, FormStore<any>> = new Map()
+    private readonly bindCache: Map<keyof T | number, FormStore<any, any>> = new Map()
 
     constructor(
-        readonly value: Atom<T>,
+        readonly value: Atom<WithUndefined extends true ? T | undefined : T>,
         readonly validationResult: Observable<ValidationResult<T>>,
     ) {}
 
-    bind<K extends keyof T>(field: K): FormStore<T[K]> {
+    bind(index: number): FormStore<ElementOfArray<T>, true>
+    bind<K extends keyof NonNullable<T>>(field: K): FormStore<NonNullable<T>[K], T extends undefined | null ? true : WithUndefined>
+
+    bind<K extends keyof T>(
+        field: K | number,
+    ): FormStore<NonNullable<T>[K], T extends undefined | null ? true : WithUndefined> | FormStore<ElementOfArray<T>, true>{
         const cached = this.bindCache.get(field)
         if (cached) return cached
         // @ts-ignore
-        const created = new FormStore(this.value.lens(field), this.getChild(field))
+        const created = new FormStore(this.value.lens(typeof field === 'number' ? Lens.index(field) : field), this.getChild(field))
         this.bindCache.set(field, created)
         // @ts-ignore
         return created
