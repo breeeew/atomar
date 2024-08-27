@@ -1,3 +1,5 @@
+'use client'
+
 import type {ReadOnlyAtom} from "@atomrx/atom";
 import {useEffect, useState} from "react";
 

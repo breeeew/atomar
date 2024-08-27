@@ -1,3 +1,5 @@
+'use client'
+
 import {MutableRefObject, useCallback, useMemo, useRef} from "react"
 import {pendingWrapped, wrap} from "@atomrx/wrapped";
 import {Wrapped, WrappedObservable} from "@atomrx/wrapped";

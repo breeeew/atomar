@@ -1,3 +1,5 @@
+'use client'
+
 import type {ReactElement} from "react";
 import {useRx} from "./useRx";
 import type {RxProps} from "./types"

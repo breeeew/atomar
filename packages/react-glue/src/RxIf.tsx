@@ -1,3 +1,5 @@
+'use client'
+
 import type {ReactElement, ReactNode} from "react"
 import type { Observable } from "rxjs"
 import { useRx } from "./useRx"
