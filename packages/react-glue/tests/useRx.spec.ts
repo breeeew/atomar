@@ -1,9 +1,13 @@
 import {useRx} from '../src/useRx'
-import {act, renderHook, RenderHookResult} from '@testing-library/react-hooks';
+import {act, renderHook} from '@testing-library/react-hooks';
 import {BehaviorSubject, Subject, tap} from "rxjs";
-import {createFulfilledWrapped, pendingWrapped, Wrapped} from "@atomrx/wrapped";
+import {createFulfilledWrapped, pendingWrapped} from "@atomrx/wrapped";
 
 describe('useRx hook', () => {
+    beforeAll(() => {
+        // @ts-ignore
+        globalThis.isTest = true
+    })
     it('should start with pending value for EMPTY observable', () => {
         const obs$ = new Subject();
 

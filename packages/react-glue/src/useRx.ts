@@ -20,6 +20,11 @@ function toObsWithSyncGetter<T>(
         first = false
     })
 
+    // @ts-ignore
+    if (typeof window === 'undefined' && !globalThis.isTest) {
+        subscription.unsubscribe()
+    }
+
     return {
         source: observable,
         unsubscribe: () => {
