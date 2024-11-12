@@ -299,6 +299,8 @@ export class JsonAtom<T> extends AbstractAtom<T> {
 
     private lastBatchedValue: T
 
+    private batchRefCount = 0
+
     constructor(initialValue: T) {
         super(initialValue)
         this.latestValue = {
@@ -337,9 +339,13 @@ export class JsonAtom<T> extends AbstractAtom<T> {
     batch<TResult>(fn: () => TResult | Promise<TResult>): TResult | Promise<TResult> {
         this.lastBatchedValue = this.get()
         this._isBatching = true
+        this.batchRefCount++
         const result = fn()
         const done = (value: TResult) => {
-            this._isBatching = false
+            this.batchRefCount--
+            if (this.batchRefCount === 0) {
+                this._isBatching = false
+            }
             this.set(this.lastBatchedValue)
             return value
         }
