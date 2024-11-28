@@ -1,6 +1,6 @@
 {
   "name": "@atomrx/form",
-  "version": "1.8.3",
+  "version": "1.9.0",
   "description": "Atoms",
   "main": "esm/index.js",
   "types": "esm/index.d.ts",
