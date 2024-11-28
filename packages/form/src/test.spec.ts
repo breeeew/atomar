@@ -47,7 +47,7 @@ async function validateAsync(value: SignUpForm) {
 
 describe("FormStore", () => {
     it("create FormStore and perform validation", async () => {
-        expect.assertions(2)
+        expect.assertions(3)
         const atom = createSignUpAtom()
         const form = FormStore.create(atom, joiValidation)
         const firstNameValidation = form.bind("firstName").validationResult
@@ -57,7 +57,10 @@ describe("FormStore", () => {
                 filter((x): x is ValidationResultError<string> => x.status === "error"),
                 first()
             ))
+        
+
         expect(withError.error).toBe('"firstName" is not allowed to be empty')
+        expect(withError.type).toBe('string.empty')
 
         atom.modify(it => ({
             ...it,

@@ -13,6 +13,7 @@ export interface ValidationResultSuccess {
 export interface ValidationResultError<T> {
     status: "error"
     error: string
+    type?: string
     children: {
         [P in keyof T]+?: ValidationResult<T[P]>
     }
