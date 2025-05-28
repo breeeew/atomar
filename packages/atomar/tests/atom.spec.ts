@@ -1,5 +1,5 @@
 import {Atom} from "@atomrx/atom";
-import {combineLatest, filter, Subscription} from "rxjs";
+import {combineLatest, filter, skip, Subscription, take} from "rxjs";
 import {wait} from "./utils";
 
 describe('Atom', () => {
@@ -84,6 +84,142 @@ describe('Atom', () => {
 
         subs.unsubscribe();
     });
+
+    it.only('new test', () => {
+        const subs = new Subscription();
+        const spyRoot = jest.fn();
+        const spyFirstLevel = jest.fn();
+        const spySecondLevel = jest.fn();
+        const spyThirdLevel = jest.fn();
+
+
+        const rootAtom$ = Atom.create({
+            firstLevel: {
+                value: 1,
+                name: 'unset',
+                secondLevel: {
+                    value: 2,
+                    name: 'unset',
+                    thirdLevel: {
+                        value: 3,
+                        name: 'unset',
+                    }
+                }
+            }
+        })
+
+        const firstLevel$ = rootAtom$.lens('firstLevel');
+        const secondLevel$ = rootAtom$.view((root) => root.firstLevel.secondLevel);
+        const thirdLevel$ = rootAtom$.lens('firstLevel').lens('secondLevel').lens('thirdLevel');
+
+        subs.add(firstLevel$.subscribe((level) => {
+            if (level.name !== 'name ' + level.value) {
+                firstLevel$.modify((prev) => {
+                    return {
+                        ...prev,
+                        name: `name ${prev.value}`
+                    }
+                })
+            }
+        }));
+
+        subs.add(secondLevel$.subscribe((level) => {
+            if (level.name !== 'name ' + level.value) {
+                firstLevel$.modify((prev) => {
+                    return {
+                        ...prev,
+                        name: `name ${prev.value}`,
+                        secondLevel: {
+                            ...prev.secondLevel,
+                            name: `name ${prev.secondLevel.value}`,
+                        }
+                    }
+                })
+            }
+        }));
+
+        subs.add(thirdLevel$.subscribe((level) => {
+            if (level.name !== 'name ' + level.value) {
+                thirdLevel$.modify((prev) => {
+                    return {
+                        ...prev,
+                        name: `name ${prev.value}`
+                    }
+                })
+            }
+        }))
+
+
+        subs.add(rootAtom$.subscribe(spyRoot));
+        subs.add(firstLevel$.subscribe(spyFirstLevel));
+
+        firstLevel$.modify((prev) => ({
+            ...prev,
+            value: prev.value + 1,
+        }))
+
+        subs.add(secondLevel$.subscribe(spySecondLevel));
+        subs.add(thirdLevel$.subscribe(spyThirdLevel));
+
+        expect(spyRoot.mock.calls).toEqual([
+            [{
+                firstLevel: {
+                    value: 1,
+                    name: 'name 1',
+                    secondLevel: {
+                        value: 2,
+                        name: 'name 2',
+                        thirdLevel: {
+                            value: 3,
+                            name: 'name 3',
+                        }
+                    }
+                }
+            }],
+            [{
+                firstLevel: {
+                    value: 2,
+                    name: 'name 2',
+                    secondLevel: {
+                        value: 2,
+                        name: 'name 2',
+                        thirdLevel: {
+                            value: 3,
+                            name: 'name 3',
+                        }
+                    }
+                }
+            }]
+        ]);
+        expect(spyFirstLevel.mock.calls).toEqual([
+            [{
+                value: 1,
+                name: 'name 1',
+                secondLevel: {
+                    value: 2,
+                    name: 'name 2',
+                    thirdLevel: {
+                        value: 3,
+                        name: 'name 3',
+                    }
+                }
+            }],
+            [{
+                value: 2,
+                name: 'name 2',
+                secondLevel: {
+                    value: 2,
+                    name: 'name 2',
+                    thirdLevel: {
+                        value: 3,
+                        name: 'name 3',
+                    }
+                }
+            }]
+        ]);
+
+        subs.unsubscribe();
+    })
 
     it("should test atom batch mode", () => {
         const atom$ = Atom.create({
