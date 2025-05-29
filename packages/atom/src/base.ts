@@ -29,17 +29,13 @@ export class GlitchFreeBehaviourSubject<T> extends Observable<T> implements Beha
 
     constructor(private _value: T) {
         super((subscriber) => {
-            const next = (data: ValueWithTime<T>) => {
-                if (data.time < this.latestValue.time) {
-                    return;
-                }
-
-                subscriber.next(data.value);
-            }
-
-
             const subscription = this.internalSubject$.subscribe({
-                next,
+                next: (data: ValueWithTime<T>) => {
+                    if (data.time < this.latestValue.time) {
+                        return;
+                    }
+                    subscriber.next(data.value);
+                },
                 complete: subscriber.complete,
                 error: subscriber.error
             });
@@ -439,15 +435,6 @@ class LensedAtom<TSource, TDest> extends AbstractAtom<TDest> {
     }
 
     get() {
-        // Optimization: in case we're already subscribed to the
-        // source atom, the BehaviorSubject.getValue will return
-        // an up-to-date computed lens value.
-        //
-        // This way we don't need to recalculate the lens value
-        // every time.
-        if (this.isBatching) {
-            return this._lens.get(this._source.get())
-        }
         return this.isConnectedToSource
             ? this.getValue()
             : this._lens.get(this._source.get())
@@ -496,16 +483,7 @@ class AtomViewImpl<TSource, TDest> extends AbstractReadOnlyAtom<TDest> {
         private _getter: (x: TSource) => TDest,
         private _eq: (x: TDest, y: TDest) => boolean = structEq
     ) {
-        // @NOTE this is a major hack to optimize for not calling
-        // _getter the extra time here. This makes the underlying
-        // BehaviorSubject to have an `undefined` for it's current value.
-        //
-        // But it works because before somebody subscribes to this
-        // atom, it will subscribe to the _source (which we expect to be a
-        // descendant of BehaviorSubject as well), which will emit a
-        // value right away, triggering our _onSourceValue.
-        const initialValue = _source.isBatching ? _getter(_source.get()) : undefined
-        super(initialValue!)
+        super(_getter(_source.get()))
     }
 
     get isBatching() {
@@ -559,17 +537,7 @@ export class CombinedAtomViewImpl<TResult> extends AbstractReadOnlyAtom<TResult>
         private _combineFn: (xs: any[]) => TResult,
         private _eq: (x: TResult, y: TResult) => boolean = structEq
     ) {
-        // @NOTE this is a major hack to optimize for not calling
-        // _combineFn and .get for each source the extra time here.
-        // This makes the underlying BehaviorSubject to have an
-        // `undefined` for it's current value.
-        //
-        // But it works because before somebody subscribes to this
-        // atom, it will subscribe to the _source (which we expect to be a
-        // descendant of BehaviorSubject as well), which will emit a
-        // value right away, triggering our _onSourceValue.
-        const initialValue = _sources.some(x => x.isBatching) ? _combineFn(_sources.map(x => x.get())) : undefined
-        super(initialValue!)
+        super(_combineFn(_sources.map(x => x.get())))
     }
 
     get isBatching() {
