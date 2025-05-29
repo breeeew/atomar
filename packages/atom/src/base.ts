@@ -506,8 +506,9 @@ class AtomViewImpl<TSource, TDest> extends AbstractReadOnlyAtom<TDest> {
         const prevValue = this.getValue()
         const next = this._getter(x)
 
-        if (!this._eq(prevValue, next))
+        if (!this._eq(prevValue, next)) {
             this.next(next)
+        }
     }
 
     override subscribe(observerOrNext?: Partial<Observer<TDest>> | ((value: TDest) => void) | null): Subscription {
