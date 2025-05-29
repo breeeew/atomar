@@ -425,16 +425,7 @@ class LensedAtom<TSource, TDest> extends AbstractAtom<TDest> {
         private _lens: Lens<TSource, TDest>,
         private _eq: (x: TDest, y: TDest) => boolean = structEq
     ) {
-        // @NOTE this is a major hack to optimize for not calling
-        // _lens.get the extra time here. This makes the underlying
-        // BehaviorSubject to have an `undefined` for it's current value.
-        //
-        // But it works because before somebody subscribes to this
-        // atom, it will subscribe to the _source (which we expect to be a
-        // descendant of BehaviorSubject as well), which will emit a
-        // value right away, triggering our _onSourceValue.
-        const initialValue = _source.isBatching ? _lens.get(_source.get()) : undefined
-        super(initialValue!)
+        super(_lens.get(_source.get()))
     }
 
     override get isBatching() {
