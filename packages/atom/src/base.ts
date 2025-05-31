@@ -1,6 +1,6 @@
 import {Lens, Prism} from '@atomrx/lens'
 import {structEq, Option} from '@atomrx/utils'
-import {Observable, Subscription, BehaviorSubject, combineLatest, Observer, Subscriber} from 'rxjs'
+import {Observable, Subscription, BehaviorSubject, combineLatest, Observer} from 'rxjs'
 import {isPromise} from "rxjs/internal/util/isPromise";
 import {share, tap} from "rxjs/operators";
 
