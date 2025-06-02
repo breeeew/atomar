@@ -398,7 +398,15 @@ export class JsonAtom<T> extends AbstractAtom<T> {
             this.set(this.lastBatchedValue)
             return value
         }
-        return isPromise(result) ? result.then(done) : done(result)
+        return isPromise(result) ? result.catch((error) => {
+            this.batchRefCount--
+            if (this.batchRefCount === 0) {
+                this._isBatching = false
+            }
+            this.set(this.lastBatchedValue)
+
+            throw error;
+        }).then(done) : done(result)
     }
 }
 
@@ -457,9 +465,9 @@ class LensedAtom<TSource, TDest> extends AbstractAtom<TDest> {
     }
 
     override subscribe(observerOrNext?: Partial<Observer<TDest>> | ((value: TDest) => void) | null): Subscription {
+        const subscription = this._sharedSourceUpdateEffect$.subscribe();
         const subscriber = super.subscribe(observerOrNext || undefined);
-
-        subscriber.add(this._sharedSourceUpdateEffect$.subscribe())
+        subscriber.add(subscription)
         return subscriber;
     }
 }
@@ -512,9 +520,9 @@ class AtomViewImpl<TSource, TDest> extends AbstractReadOnlyAtom<TDest> {
     }
 
     override subscribe(observerOrNext?: Partial<Observer<TDest>> | ((value: TDest) => void) | null): Subscription {
+        const subscription = this._sharedSourceUpdateEffect$.subscribe();
         const subscriber = super.subscribe(observerOrNext || undefined);
-
-        subscriber.add(this._sharedSourceUpdateEffect$.subscribe())
+        subscriber.add(subscription)
         return subscriber;
     }
 }
@@ -566,9 +574,9 @@ export class CombinedAtomViewImpl<TResult> extends AbstractReadOnlyAtom<TResult>
     }
 
     override subscribe(observerOrNext?: Partial<Observer<TResult>> | ((value: TResult) => void) | null): Subscription {
+        const subscription = this._sharedSourceUpdateEffect$.subscribe();
         const subscriber = super.subscribe(observerOrNext || undefined);
-
-        subscriber.add(this._sharedSourceUpdateEffect$.subscribe())
+        subscriber.add(subscription)
         return subscriber;
     }
 
