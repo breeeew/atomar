@@ -411,12 +411,9 @@ export class JsonAtom<T> extends AbstractAtom<T> {
 }
 
 class LensedAtom<TSource, TDest> extends AbstractAtom<TDest> {
-    private isConnectedToSource = false;
 
     private _sharedSourceUpdateEffect$ = this._source.pipe(
         tap({
-            subscribe: (() => this.isConnectedToSource = true),
-            unsubscribe: (() => this.isConnectedToSource = false),
             next: (nextValue) => {
                 this._onSourceValue(nextValue);
             }
@@ -443,9 +440,7 @@ class LensedAtom<TSource, TDest> extends AbstractAtom<TDest> {
     }
 
     get() {
-        return this.isConnectedToSource
-            ? this.getValue()
-            : this._lens.get(this._source.get())
+        return this._lens.get(this._source.get())
     }
 
     modify(updateFn: (x: TDest) => TDest) {
@@ -473,12 +468,9 @@ class LensedAtom<TSource, TDest> extends AbstractAtom<TDest> {
 }
 
 class AtomViewImpl<TSource, TDest> extends AbstractReadOnlyAtom<TDest> {
-    private isConnectedToSource = false;
 
     private _sharedSourceUpdateEffect$ = this._source.pipe(
         tap({
-            subscribe: (() => this.isConnectedToSource = true),
-            unsubscribe: (() => this.isConnectedToSource = false),
             next: (nextValue) => {
                 this._onSourceValue(nextValue);
             }
@@ -499,15 +491,7 @@ class AtomViewImpl<TSource, TDest> extends AbstractReadOnlyAtom<TDest> {
     }
 
     get() {
-        // Optimization: in case we're already subscribed to the
-        // source atom, the BehaviorSubject.getValue will return
-        // an up-to-date computed lens value.
-        //
-        // This way we don't need to recalculate the view value
-        // every time.
-        return this.isConnectedToSource
-            ? this.getValue()
-            : this._getter(this._source.get())
+        return this._getter(this._source.get())
     }
 
     private _onSourceValue(x: TSource) {
@@ -528,12 +512,9 @@ class AtomViewImpl<TSource, TDest> extends AbstractReadOnlyAtom<TDest> {
 }
 
 export class CombinedAtomViewImpl<TResult> extends AbstractReadOnlyAtom<TResult> {
-    private isConnectedToSource = false;
 
     private _sharedSourceUpdateEffect$ = combineLatest(this._sources).pipe(
         tap({
-            subscribe: (() => this.isConnectedToSource = true),
-            unsubscribe: (() => this.isConnectedToSource = false),
             next: (nextValue) => {
                 this._onSourceValues(nextValue);
             }
@@ -554,15 +535,7 @@ export class CombinedAtomViewImpl<TResult> extends AbstractReadOnlyAtom<TResult>
     }
 
     get() {
-        // Optimization: in case we're already subscribed to
-        // source atoms, the BehaviorSubject.getValue will return
-        // an up-to-date computed view value.
-        //
-        // This way we don't need to recalculate the view value
-        // every time.
-        return this.isConnectedToSource
-            ? this.getValue()
-            : this._combineFn(this._sources.map(x => x.get()))
+        return this._combineFn(this._sources.map(x => x.get()))
     }
 
     private _onSourceValues(xs: any[]) {

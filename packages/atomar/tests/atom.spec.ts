@@ -389,4 +389,31 @@ describe('Atom', () => {
 
         expect(atom$.isBatching).toBe(false);
     })
+
+    it("#get() should not return outdated value for derived atoms", async () => {
+        const atom$ = Atom.create({
+            value: 123
+        })
+
+        const view$ = atom$.view('value');
+
+        const sub = new Subscription();
+        const spy = jest.fn();
+
+        sub.add(atom$.subscribe(() => {
+            spy(view$.get());
+        }));
+
+        sub.add(view$.subscribe())
+
+        atom$.modify((prev) => ({
+            ...prev,
+            value: 456
+        }))
+
+        expect(spy.mock.calls).toEqual([[123], [456]])
+
+
+        sub.unsubscribe()
+    })
 })
