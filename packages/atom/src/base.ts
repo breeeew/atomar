@@ -1,10 +1,74 @@
-import { Lens, Prism } from '@atomrx/lens'
-import { structEq, Option } from '@atomrx/utils'
-
-import { Observable, Subscriber, Subscription, BehaviorSubject, combineLatest } from 'rxjs'
+import {Lens, Prism} from '@atomrx/lens'
+import {structEq, Option} from '@atomrx/utils'
+import {Observable, Subscription, BehaviorSubject, combineLatest, Observer} from 'rxjs'
 import {isPromise} from "rxjs/internal/util/isPromise";
+import {share, tap} from "rxjs/operators";
 
 type InferAtomType<T> = Exclude<T, undefined>
+
+type ValueWithTime<T> = {
+    time: number;
+    value: T
+}
+
+interface BehaviourSubjectLike<T> extends Observer<T> {
+    get value(): T;
+
+    getValue(): T;
+
+    next(value: T): void;
+}
+
+export class GlitchFreeBehaviourSubject<T> extends Observable<T> implements BehaviourSubjectLike<T> {
+    private latestValue: ValueWithTime<T> = {
+        time: 0,
+        value: this._value
+    }
+
+    private readonly internalSubject$ = new BehaviorSubject<ValueWithTime<T>>(this.latestValue);
+
+    constructor(private _value: T) {
+        super((subscriber) => {
+            const subscription = this.internalSubject$.subscribe({
+                next: (data: ValueWithTime<T>) => {
+                    if (data.time < this.latestValue.time) {
+                        return;
+                    }
+                    subscriber.next(data.value);
+                },
+                complete: subscriber.complete,
+                error: subscriber.error
+            });
+            return () => subscription.unsubscribe();
+        });
+    }
+
+    get value() {
+        return this.getValue();
+    }
+
+    next(value: T) {
+        this.latestValue = {
+            time: this.latestValue.time + 1,
+            value
+        }
+
+        this.internalSubject$.next(this.latestValue);
+    }
+
+    getValue(): T {
+        return this.latestValue.value;
+    }
+
+    complete(): void {
+        this.internalSubject$.complete()
+    }
+
+    error(err: unknown): void {
+        this.internalSubject$.error(err)
+    }
+}
+
 
 /**
  * Read-only atom.
@@ -105,7 +169,7 @@ export interface ReadOnlyAtom<T> extends Observable<T> {
     view<
         K1 extends keyof T,
         K2 extends keyof T[K1]
-        >(k1: K1, k2: K2): ReadOnlyAtom<T[K1][K2]>
+    >(k1: K1, k2: K2): ReadOnlyAtom<T[K1][K2]>
 
     /**
      * View this atom at a give property path.
@@ -114,7 +178,7 @@ export interface ReadOnlyAtom<T> extends Observable<T> {
         K1 extends keyof T,
         K2 extends keyof T[K1],
         K3 extends keyof T[K1][K2]
-        >(k1: K1, k2: K2, k3: K3): ReadOnlyAtom<T[K1][K2][K3]>
+    >(k1: K1, k2: K2, k3: K3): ReadOnlyAtom<T[K1][K2][K3]>
 
     /**
      * View this atom at a give property path.
@@ -124,7 +188,7 @@ export interface ReadOnlyAtom<T> extends Observable<T> {
         K2 extends keyof T[K1],
         K3 extends keyof T[K1][K2],
         K4 extends keyof T[K1][K2][K3]
-        >(k1: K1, k2: K2, k3: K3, k4: K4): ReadOnlyAtom<T[K1][K2][K3][K4]>
+    >(k1: K1, k2: K2, k3: K3, k4: K4): ReadOnlyAtom<T[K1][K2][K3][K4]>
 
     /**
      * View this atom at a give property path.
@@ -135,7 +199,7 @@ export interface ReadOnlyAtom<T> extends Observable<T> {
         K3 extends keyof T[K1][K2],
         K4 extends keyof T[K1][K2][K3],
         K5 extends keyof T[K1][K2][K3][K4]
-        >(k1: K1, k2: K2, k3: K3, k4: K4, k5: K5): ReadOnlyAtom<T[K1][K2][K3][K4][K5]>
+    >(k1: K1, k2: K2, k3: K3, k4: K4, k5: K5): ReadOnlyAtom<T[K1][K2][K3][K4][K5]>
 
     // @internal
     readonly isBatching: boolean
@@ -165,6 +229,7 @@ export interface Atom<T> extends ReadOnlyAtom<T> {
      * @param fn batch update function
      */
     batch<TResult>(fn: () => Promise<TResult>): Promise<TResult>
+
     batch<TResult>(fn: () => TResult): TResult
 
     /**
@@ -194,7 +259,7 @@ export interface Atom<T> extends ReadOnlyAtom<T> {
     lens<
         K1 extends keyof T,
         K2 extends keyof T[K1]
-        >(k1: K1, k2: K2): Atom<T[K1][K2]>
+    >(k1: K1, k2: K2): Atom<T[K1][K2]>
 
     /**
      * Create a lensed atom that's focused on a given property path.
@@ -203,7 +268,7 @@ export interface Atom<T> extends ReadOnlyAtom<T> {
         K1 extends keyof T,
         K2 extends keyof T[K1],
         K3 extends keyof T[K1][K2]
-        >(k1: K1, k2: K2, k3: K3): Atom<T[K1][K2][K3]>
+    >(k1: K1, k2: K2, k3: K3): Atom<T[K1][K2][K3]>
 
     /**
      * Create a lensed atom that's focused on a given property path.
@@ -213,7 +278,7 @@ export interface Atom<T> extends ReadOnlyAtom<T> {
         K2 extends keyof T[K1],
         K3 extends keyof T[K1][K2],
         K4 extends keyof T[K1][K2][K3]
-        >(k1: K1, k2: K2, k3: K3, k4: K4): Atom<T[K1][K2][K3][K4]>
+    >(k1: K1, k2: K2, k3: K3, k4: K4): Atom<T[K1][K2][K3][K4]>
 
     /**
      * Create a lensed atom that's focused on a given property path.
@@ -224,11 +289,11 @@ export interface Atom<T> extends ReadOnlyAtom<T> {
         K3 extends keyof T[K1][K2],
         K4 extends keyof T[K1][K2][K3],
         K5 extends keyof T[K1][K2][K3][K4]
-        >(k1: K1, k2: K2, k3: K3, k4: K4, k5: K5): Atom<T[K1][K2][K3][K4][K5]>
+    >(k1: K1, k2: K2, k3: K3, k4: K4, k5: K5): Atom<T[K1][K2][K3][K4][K5]>
 }
 
 export abstract class AbstractReadOnlyAtom<T>
-    extends BehaviorSubject<T>
+    extends GlitchFreeBehaviourSubject<T>
     implements ReadOnlyAtom<T> {
     abstract get(): T
 
@@ -284,18 +349,7 @@ export abstract class AbstractAtom<T> extends AbstractReadOnlyAtom<T> implements
     }
 }
 
-let clock = 0;
-
 export class JsonAtom<T> extends AbstractAtom<T> {
-    private latestValue: {
-        value: T,
-        time: number;
-    };
-
-    private readonly internalSubj: BehaviorSubject<{
-        value: T,
-        time: number;
-    }>
 
     private lastBatchedValue: T
 
@@ -303,17 +357,12 @@ export class JsonAtom<T> extends AbstractAtom<T> {
 
     constructor(initialValue: T) {
         super(initialValue)
-        this.latestValue = {
-            value: initialValue,
-            time: clock++
-        }
         this.lastBatchedValue = initialValue
-        this.internalSubj = new BehaviorSubject(this.latestValue)
     }
 
     get() {
         if (this.isBatching) return this.lastBatchedValue
-        return this.latestValue.value;
+        return this.getValue();
     }
 
     modify(updateFn: (x: T) => T) {
@@ -321,8 +370,8 @@ export class JsonAtom<T> extends AbstractAtom<T> {
         const next = updateFn(prevValue)
 
         if (!structEq(prevValue, next)) {
-           if (this.isBatching) this.lastBatchedValue = next
-           else this.next(next)
+            if (this.isBatching) this.lastBatchedValue = next
+            else this.next(next)
         }
     }
 
@@ -349,44 +398,35 @@ export class JsonAtom<T> extends AbstractAtom<T> {
             this.set(this.lastBatchedValue)
             return value
         }
-        return isPromise(result) ? result.then(done) : done(result)
-    }
-
-    override next(value: T) {
-        this.latestValue = {
-            value,
-            time: clock++
-        }
-        this.internalSubj.next(this.latestValue)
-    }
-
-    protected _subscribe(subscriber: Subscriber<T>) {
-        subscriber.add(this.internalSubj.subscribe(data => {
-            if (data.time >= this.latestValue.time) {
-                subscriber.next(data.value)
+        return isPromise(result) ? result.catch((error) => {
+            this.batchRefCount--
+            if (this.batchRefCount === 0) {
+                this._isBatching = false
             }
-        }))
+            this.set(this.lastBatchedValue)
 
-        return subscriber
+            throw error;
+        }).then(done) : done(result)
     }
 }
 
 class LensedAtom<TSource, TDest> extends AbstractAtom<TDest> {
+
+    private _sharedSourceUpdateEffect$ = this._source.pipe(
+        tap({
+            next: (nextValue) => {
+                this._onSourceValue(nextValue);
+            }
+        }),
+        share()
+    )
+
     constructor(
         private _source: Atom<TSource>,
         private _lens: Lens<TSource, TDest>,
         private _eq: (x: TDest, y: TDest) => boolean = structEq
     ) {
-        // @NOTE this is a major hack to optimize for not calling
-        // _lens.get the extra time here. This makes the underlying
-        // BehaviorSubject to have an `undefined` for it's current value.
-        //
-        // But it works because before somebody subscribes to this
-        // atom, it will subscribe to the _source (which we expect to be a
-        // descendant of BehaviorSubject as well), which will emit a
-        // value right away, triggering our _onSourceValue.
-        const initialValue = _source.isBatching ? _lens.get(_source.get()) : undefined
-        super(initialValue!)
+        super(_lens.get(_source.get()))
     }
 
     override get isBatching() {
@@ -400,18 +440,7 @@ class LensedAtom<TSource, TDest> extends AbstractAtom<TDest> {
     }
 
     get() {
-        // Optimization: in case we're already subscribed to the
-        // source atom, the BehaviorSubject.getValue will return
-        // an up-to-date computed lens value.
-        //
-        // This way we don't need to recalculate the lens value
-        // every time.
-        if (this.isBatching) {
-            return this._lens.get(this._source.get())
-        }
-        return this._subscription
-            ? this.getValue()
-            : this._lens.get(this._source.get())
+        return this._lens.get(this._source.get())
     }
 
     modify(updateFn: (x: TDest) => TDest) {
@@ -430,55 +459,31 @@ class LensedAtom<TSource, TDest> extends AbstractAtom<TDest> {
             this.next(next)
     }
 
-    private _subscription: Subscription | null = null
-    private _refCount = 0
-
-    // Rx method overrides
-    protected _subscribe(subscriber: Subscriber<TDest>) {
-        if (!this._subscription) {
-            this._subscription = this._source.subscribe(x => this._onSourceValue(x))
-        }
-        this._refCount++
-
-        const sub = new Subscription(() => {
-            if (--this._refCount <= 0 && this._subscription) {
-                this._subscription.unsubscribe()
-                this._subscription = null
-            }
-        })
-        // @ts-ignore
-        sub.add(super._subscribe(subscriber))
-
-        return sub
-    }
-
-    unsubscribe() {
-        if (this._subscription) {
-            this._subscription.unsubscribe()
-            this._subscription = null
-        }
-        this._refCount = 0
-
-        super.unsubscribe()
+    override subscribe(observerOrNext?: Partial<Observer<TDest>> | ((value: TDest) => void) | null): Subscription {
+        const subscription = this._sharedSourceUpdateEffect$.subscribe();
+        const subscriber = super.subscribe(observerOrNext || undefined);
+        subscriber.add(subscription)
+        return subscriber;
     }
 }
 
 class AtomViewImpl<TSource, TDest> extends AbstractReadOnlyAtom<TDest> {
+
+    private _sharedSourceUpdateEffect$ = this._source.pipe(
+        tap({
+            next: (nextValue) => {
+                this._onSourceValue(nextValue);
+            }
+        }),
+        share()
+    )
+
     constructor(
         private _source: ReadOnlyAtom<TSource>,
         private _getter: (x: TSource) => TDest,
         private _eq: (x: TDest, y: TDest) => boolean = structEq
     ) {
-        // @NOTE this is a major hack to optimize for not calling
-        // _getter the extra time here. This makes the underlying
-        // BehaviorSubject to have an `undefined` for it's current value.
-        //
-        // But it works because before somebody subscribes to this
-        // atom, it will subscribe to the _source (which we expect to be a
-        // descendant of BehaviorSubject as well), which will emit a
-        // value right away, triggering our _onSourceValue.
-        const initialValue = _source.isBatching ? _getter(_source.get()) : undefined
-        super(initialValue!)
+        super(_getter(_source.get()))
     }
 
     get isBatching() {
@@ -486,75 +491,43 @@ class AtomViewImpl<TSource, TDest> extends AbstractReadOnlyAtom<TDest> {
     }
 
     get() {
-        // Optimization: in case we're already subscribed to the
-        // source atom, the BehaviorSubject.getValue will return
-        // an up-to-date computed lens value.
-        //
-        // This way we don't need to recalculate the view value
-        // every time.
-        return this._subscription
-            ? this.getValue()
-            : this._getter(this._source.get())
+        return this._getter(this._source.get())
     }
 
     private _onSourceValue(x: TSource) {
         const prevValue = this.getValue()
         const next = this._getter(x)
 
-        if (!this._eq(prevValue, next))
+        if (!this._eq(prevValue, next)) {
             this.next(next)
+        }
     }
 
-    private _subscription: Subscription | null = null
-    private _refCount = 0
-
-    // Rx method overrides
-    protected _subscribe(subscriber: Subscriber<TDest>) {
-        if (!this._subscription) {
-            this._subscription = this._source.subscribe(x => this._onSourceValue(x))
-        }
-        this._refCount++
-
-        const sub = new Subscription(() => {
-            if (--this._refCount <= 0 && this._subscription) {
-                this._subscription.unsubscribe()
-                this._subscription = null
-            }
-        })
-        // @ts-ignore
-        sub.add(super._subscribe(subscriber))
-
-        return sub
-    }
-
-    unsubscribe() {
-        if (this._subscription) {
-            this._subscription.unsubscribe()
-            this._subscription = null
-        }
-        this._refCount = 0
-
-        super.unsubscribe()
+    override subscribe(observerOrNext?: Partial<Observer<TDest>> | ((value: TDest) => void) | null): Subscription {
+        const subscription = this._sharedSourceUpdateEffect$.subscribe();
+        const subscriber = super.subscribe(observerOrNext || undefined);
+        subscriber.add(subscription)
+        return subscriber;
     }
 }
 
 export class CombinedAtomViewImpl<TResult> extends AbstractReadOnlyAtom<TResult> {
+
+    private _sharedSourceUpdateEffect$ = combineLatest(this._sources).pipe(
+        tap({
+            next: (nextValue) => {
+                this._onSourceValues(nextValue);
+            }
+        }),
+        share()
+    )
+
     constructor(
         private _sources: ReadOnlyAtom<any>[],
         private _combineFn: (xs: any[]) => TResult,
         private _eq: (x: TResult, y: TResult) => boolean = structEq
     ) {
-        // @NOTE this is a major hack to optimize for not calling
-        // _combineFn and .get for each source the extra time here.
-        // This makes the underlying BehaviorSubject to have an
-        // `undefined` for it's current value.
-        //
-        // But it works because before somebody subscribes to this
-        // atom, it will subscribe to the _source (which we expect to be a
-        // descendant of BehaviorSubject as well), which will emit a
-        // value right away, triggering our _onSourceValue.
-        const initialValue = _sources.some(x => x.isBatching) ? _combineFn(_sources.map(x => x.get())) : undefined
-        super(initialValue!)
+        super(_combineFn(_sources.map(x => x.get())))
     }
 
     get isBatching() {
@@ -562,15 +535,7 @@ export class CombinedAtomViewImpl<TResult> extends AbstractReadOnlyAtom<TResult>
     }
 
     get() {
-        // Optimization: in case we're already subscribed to
-        // source atoms, the BehaviorSubject.getValue will return
-        // an up-to-date computed view value.
-        //
-        // This way we don't need to recalculate the view value
-        // every time.
-        return this._subscription
-            ? this.getValue()
-            : this._combineFn(this._sources.map(x => x.get()))
+        return this._combineFn(this._sources.map(x => x.get()))
     }
 
     private _onSourceValues(xs: any[]) {
@@ -581,36 +546,11 @@ export class CombinedAtomViewImpl<TResult> extends AbstractReadOnlyAtom<TResult>
             this.next(next)
     }
 
-    private _subscription: Subscription | null = null
-    private _refCount = 0
-
-    // Rx method overrides
-    protected _subscribe(subscriber: Subscriber<TResult>) {
-        if (!this._subscription) {
-            this._subscription = combineLatest(this._sources)
-                .subscribe(xs => this._onSourceValues(xs))
-        }
-        this._refCount++
-
-        const sub = new Subscription(() => {
-            if (--this._refCount <= 0 && this._subscription) {
-                this._subscription.unsubscribe()
-                this._subscription = null
-            }
-        })
-        // @ts-ignore
-        sub.add(super._subscribe(subscriber))
-
-        return sub
+    override subscribe(observerOrNext?: Partial<Observer<TResult>> | ((value: TResult) => void) | null): Subscription {
+        const subscription = this._sharedSourceUpdateEffect$.subscribe();
+        const subscriber = super.subscribe(observerOrNext || undefined);
+        subscriber.add(subscription)
+        return subscriber;
     }
 
-    unsubscribe() {
-        if (this._subscription) {
-            this._subscription.unsubscribe()
-            this._subscription = null
-        }
-        this._refCount = 0
-
-        super.unsubscribe()
-    }
 }
