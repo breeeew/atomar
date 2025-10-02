@@ -1,6 +1,6 @@
 {
   "name": "@atomrx/rx",
-  "version": "1.7.8",
+  "version": "1.9.3",
   "description": "RxJS operators and utilities for atomar",
   "main": "esm/index.js",
   "types": "esm/index.d.ts",
