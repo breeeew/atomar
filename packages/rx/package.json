@@ -17,10 +17,12 @@
     "clean": "rm -rf esm && rm -rf src/*.{js,d.ts,map}",
     "compile": "tsc -p tsconfig.build.json"
   },
+  "peerDependencies": {
+    "rxjs": "^7.8.0"
+  },
   "dependencies": {
     "@atomrx/lens": "^1.7.8",
-    "@atomrx/utils": "^1.7.8",
-    "rxjs": "^7.8.0"
+    "@atomrx/utils": "^1.7.8"
   },
   "gitHead": "fd9f22f2aff87d4286ca9809e3c9f54c8590464f"
 }
